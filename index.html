@@ -2,32 +2,29 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>GAS 테스트</title>
+  <title>GAS 응답 테스트</title>
 </head>
 <body>
-  <h1>데이터 전송 테스트</h1>
-
-  <input id="name" placeholder="이름 입력"><br>
-  <input id="message" placeholder="메시지 입력"><br>
-  <button onclick="sendData()">보내기</button>
-
-  <pre id="result">응답 대기 중...</pre>
+  <h1>테스트</h1>
+  <input id="name" placeholder="이름"><br>
+  <input id="message" placeholder="메시지"><br>
+  <button onclick="send()">보내기</button>
+  <pre id="result"></pre>
 
   <script>
-    function sendData() {
-      const name = "테스트";
-      const message = "연결 확인";
-    
+    function send() {
+      const name = document.getElementById("name").value;
+      const message = document.getElementById("message").value;
+
       fetch("https://script.google.com/macros/s/AKfycbwTsIQ8tpM_q4fU0VTkrH1VZEZDgrCHd5MYB0X2WtvqNq66EJWNgyDQ3MicS8BSr8oj/exec", {
         method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, message })
-    })
-    .then(res => res.json())
-    .then(data => console.log("✅ 응답:", data))
-    .catch(err => console.error("❌ 오류:", err));
-  }
-</script>
-    
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, message })
+      })
+      .then(res => res.json())
+      .then(data => document.getElementById("result").textContent = JSON.stringify(data, null, 2))
+      .catch(err => document.getElementById("result").textContent = "❌ 오류: " + err.message);
+    }
+  </script>
 </body>
 </html>
