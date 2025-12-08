@@ -1,31 +1,25 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
-  <title>헌터스 메인</title>
+  <title>삼성 헌터스</title>
 </head>
+
 <body>
-  <h1>헌터스 메인 페이지</h1>
+  <h1>삼성 헌터스</h1>
 
   <!-- 기존 메인 컨텐츠들 -->
 
   <!-- 선수관리 버튼 -->
-  <button id="adminBtn">선수관리</button>
+  <button id="adminBtn">선수 포지션 관리</button>
 
   <script>
     document.getElementById('adminBtn').addEventListener('click', () => {
-      const pw = prompt('관리자 비밀번호를 입력하세요');
-
-      if (pw === '1234') {
-        // 간단한 인증 토큰 저장
-        localStorage.setItem('hunters_admin_auth', 'ok');
-        // 관리자 페이지로 이동
-        window.location.href = 'admin.html';
-      } else if (pw !== null) {
-        // 취소(null) 말고 다른 값을 넣고 틀렸을 때만 경고
-        alert('비밀번호가 틀렸습니다');
-      }
+      window.location.href = 'admin.html';
     });
   </script>
+
 </body>
+
 </html>
