@@ -1,30 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>Google Sheets 연동 예제</title>
+  <meta charset="UTF-8">
+  <title>GAS 테스트</title>
 </head>
 <body>
-    <h1>방명록 작성</h1>
-    <input id="name" placeholder="이름"><br>
-    <input id="message" placeholder="메시지"><br>
-    <button onclick="sendData()">보내기</button>
+  <h1>데이터 전송 테스트</h1>
 
-    <script>
-        function sendData() {
-            const name = document.getElementById('name').value;
-            const message = document.getElementById('message').value;
+  <input id="name" placeholder="이름 입력"><br>
+  <input id="message" placeholder="메시지 입력"><br>
+  <button onclick="sendData()">보내기</button>
 
-            fetch('https://script.google.com/macros/s/AKfycbzrbQe2u3qj4Ek4gGmlsWwWbgN64hRHMp4z0Tv3E2BnVjOEnVyypwVgyvjW8W12xsgB/exec', {
-                method: 'POST',
-                body: JSON.stringify({ name: name, message: message }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(res => res.text())
-            .then(data => alert("성공적으로 저장되었습니다!"))
-            .catch(err => alert("오류 발생: " + err));
-        }
-    </script>
+  <pre id="result">응답 대기 중...</pre>
+
+  <script>
+    function sendData() {
+      const name = "테스트";
+      const message = "연결 확인";
+    
+      fetch("https://script.google.com/macros/s/AKfycbwTsIQ8tpM_q4fU0VTkrH1VZEZDgrCHd5MYB0X2WtvqNq66EJWNgyDQ3MicS8BSr8oj/exec", {
+        method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, message })
+    })
+    .then(res => res.json())
+    .then(data => console.log("✅ 응답:", data))
+    .catch(err => console.error("❌ 오류:", err));
+  }
+</script>
+    
 </body>
 </html>
