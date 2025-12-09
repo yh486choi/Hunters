@@ -2,7 +2,7 @@
 <html lang="ko">
 
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>⚾ 삼성 헌터스 선수 포지션 ⚾</title>
   <style>
     table {
@@ -39,8 +39,8 @@
 </head>
 
 <body>
-  <div style='text-align: left; margin: 10px;'>
-    <button onclick='goMain()'>홈 화면</button>
+  <div style="text-align: left; margin: 10px;">
+    <button onclick="goMain()">홈 화면</button>
   </div>
 
   <h1>⚾ 삼성 헌터스 선수 포지션 ⚾</h1>
@@ -50,7 +50,7 @@
     <button onclick="loadPlayers()">↩ 원래대로</button>
   </div>
 
-  <!-- 추가 입력 테이블 -->
+  <!-- 새로운 선수 추가 영역 -->
   <table>
     <thead>
       <tr>
@@ -68,8 +68,8 @@
     </thead>
     <tbody>
       <tr id="addRow">
-        <td><input type="text" id="add_name"></td>
-        <td><input type="number" id="add_num"></td>
+        <td><input type="text" id="add_name" /></td>
+        <td><input type="number" id="add_num" /></td>
         <td><select id="add_p"></select></td>
         <td><select id="add_c"></select></td>
         <td><select id="add_1b"></select></td>
@@ -81,20 +81,19 @@
       </tr>
     </tbody>
   </table>
-
-  <!-- 선수 리스트 -->
+  <!-- 기존 선수 목록 테이블 -->
   <table id="playerTable">
     <thead>
       <tr>
-        <th>이름</th>
-        <th>배번</th>
-        <th>투수</th>
-        <th>포수</th>
-        <th>1루수</th>
-        <th>2루수</th>
-        <th>3루수</th>
-        <th>유격수</th>
-        <th>외야수</th>
+        <th>이름 <button onclick="setSort('name')">⇅</button></th>
+        <th>배번 <button onclick="setSort('num')">⇅</button></th>
+        <th>투수 <button onclick="setSort('p')">⇅</button></th>
+        <th>포수 <button onclick="setSort('c')">⇅</button></th>
+        <th>1루수 <button onclick="setSort('1b')">⇅</button></th>
+        <th>2루수 <button onclick="setSort('2b')">⇅</button></th>
+        <th>3루수 <button onclick="setSort('3b')">⇅</button></th>
+        <th>유격수 <button onclick="setSort('ss')">⇅</button></th>
+        <th>외야수 <button onclick="setSort('of')">⇅</button></th>
         <th>삭제</th>
       </tr>
     </thead>
@@ -102,41 +101,86 @@
   </table>
 
   <script>
-    const API_BASE = "https://us-central1-hunters-f2581.cloudfunctions.net";
+    const API = {
+      check: "https://checkpassword-2guymqucma-uc.a.run.app",
+      updatePw: "https://updatepassword-2guymqucma-uc.a.run.app",
+      getPlayers: "https://getplayers-2guymqucma-uc.a.run.app",
+      updatePlayers: "https://updateplayers-2guymqucma-uc.a.run.app"
+    };
 
     const POS_FIELDS = ["p", "c", "1b", "2b", "3b", "ss", "of"];
+    let currentSortField = "name";
+    let currentSortOrder = "asc";
+
     const LABELS = {
       "0": "🔴 불가",
-      "1": "🟢 선발",
-      "2": "🟡 후보"
+      "1": "🟡 후보",
+      "2": "🟢 선발"
     };
-    const VALUES = {
-      "🔴 불가": "0",
-      "🟢 선발": "1",
-      "🟡 후보": "2"
-    };
+
+    function goMain() {
+      window.location.href = "index.html";
+    }
 
     function initAddSelects() {
       POS_FIELDS.forEach(pos => {
         const sel = document.getElementById(`add_${pos}`);
         sel.innerHTML = "";
-        ["1", "2", "0"].forEach(val => {
+        ["0", "1", "2"].forEach(v => {
           const opt = document.createElement("option");
-          opt.value = val;
-          opt.textContent = LABELS[val];
+          opt.value = v;
+          opt.textContent = LABELS[v];
           sel.appendChild(opt);
         });
         sel.value = "0";
       });
     }
 
-    function goMain() {
-      window.location.href = 'index.html';
+    function setSort(field) {
+      if (currentSortField === field) {
+        currentSortOrder = currentSortOrder === "asc" ? "desc" : "asc";
+      } else {
+        currentSortField = field;
+        currentSortOrder = "asc";
+      }
+      loadPlayers();
+    }
+
+    function sortData(data) {
+      return data.sort((a, b) => {
+        const A = a[currentSortField] ?? "";
+        const B = b[currentSortField] ?? "";
+
+        if (currentSortField === "num") {
+          return currentSortOrder === "asc"
+            ? Number(A || 0) - Number(B || 0)
+            : Number(B || 0) - Number(A || 0);
+        }
+
+        return currentSortOrder === "asc"
+          ? String(A).localeCompare(String(B), "ko")
+          : String(B).localeCompare(String(A), "ko");
+      });
+    }
+
+    async function verifyPassword() {
+      const pw = prompt("비밀번호를 입력하세요");
+      if (!pw) return false;
+
+      const res = await fetch(API.check, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw })
+      });
+
+      const result = await res.json();
+      return result.status === "성공";
     }
 
     async function loadPlayers() {
-      const res = await fetch(`${API_BASE}/getPlayers`);
-      const data = await res.json();
+      const res = await fetch(API.getPlayers);
+      let data = await res.json();
+      data = sortData(data);
       renderPlayerTable(data);
     }
 
@@ -144,140 +188,84 @@
       const tbody = document.querySelector("#playerTable tbody");
       tbody.innerHTML = "";
 
-      const sorted = data.sort((a, b) => (a.name || "").localeCompare(b.name || "", "ko"));
-
-      sorted.forEach(player => {
+      data.forEach(player => {
         const tr = document.createElement("tr");
 
-        const tdName = document.createElement("td");
-        tdName.innerHTML = `<input type="text" value="${player.name || ""}">`;
-        tr.appendChild(tdName);
+        tr.innerHTML += `<td><input type="text" value="${player.name}"></td>`;
+        tr.innerHTML += `<td><input type="number" value="${player.num}"></td>`;
 
-        const tdNum = document.createElement("td");
-        tdNum.innerHTML = `<input type="number" value="${player.num || ""}">`;
-        tr.appendChild(tdNum);
-
-        POS_FIELDS.forEach(field => {
-          const td = document.createElement("td");
-          const select = document.createElement("select");
-          const value = player[field] || "0";
-
-          ["1", "2", "0"].forEach(val => {
-            const option = document.createElement("option");
-            option.value = val;
-            option.textContent = LABELS[val];
-            if (val === value) option.selected = true;
-            select.appendChild(option);
+        POS_FIELDS.forEach(f => {
+          const cur = player[f] || "0";
+          let html = `<td><select>`;
+          ["0", "1", "2"].forEach(v => {
+            html += `<option value="${v}" ${v === cur ? "selected" : ""}>${LABELS[v]}</option>`;
           });
-
-          td.appendChild(select);
-          tr.appendChild(td);
+          html += `</select></td>`;
+          tr.innerHTML += html;
         });
 
-        const tdDel = document.createElement("td");
-        const btn = document.createElement("button");
-        btn.textContent = "🗑 삭제";
-        btn.onclick = () => tr.remove();
-        tdDel.appendChild(btn);
-        tr.appendChild(tdDel);
+        tr.innerHTML += `<td><button onclick="this.parentElement.parentElement.remove()">🗑 삭제</button></td>`;
 
         tbody.appendChild(tr);
       });
     }
 
     function addNewPlayer() {
-      const nameInput = document.getElementById("add_name");
-      const numInput = document.getElementById("add_num");
-      const name = nameInput.value.trim();
-      const num = numInput.value.trim();
+      const name = document.getElementById("add_name").value.trim();
+      const num = document.getElementById("add_num").value.trim();
+
       if (!name || !num) return alert("이름과 배번은 필수입니다.");
+
+      // 중복 이름 체크
+      const existing = Array.from(
+        document.querySelectorAll("#playerTable tbody tr td:first-child input")
+      ).map(i => i.value.trim());
+
+      if (existing.includes(name)) return alert("이미 존재하는 이름입니다.");
 
       const tr = document.createElement("tr");
 
-      const tdName = document.createElement("td");
-      tdName.innerHTML = `<input type="text" value="${name}">`;
-      tr.appendChild(tdName);
-
-      const tdNum = document.createElement("td");
-      tdNum.innerHTML = `<input type="number" value="${num}">`;
-      tr.appendChild(tdNum);
+      tr.innerHTML += `<td><input type="text" value="${name}"></td>`;
+      tr.innerHTML += `<td><input type="number" value="${num}"></td>`;
 
       POS_FIELDS.forEach(pos => {
-        const val = document.getElementById(`add_${pos}`).value;
-        const td = document.createElement("td");
-        const select = document.createElement("select");
-
-        ["1", "2", "0"].forEach(v => {
-          const opt = document.createElement("option");
-          opt.value = v;
-          opt.textContent = LABELS[v];
-          if (v === val) opt.selected = true;
-          select.appendChild(opt);
+        const v = document.getElementById(`add_${pos}`).value;
+        let html = `<td><select>`;
+        ["0", "1", "2"].forEach(x => {
+          html += `<option value="${x}" ${x === v ? "selected" : ""}>${LABELS[x]}</option>`;
         });
-
-        td.appendChild(select);
-        tr.appendChild(td);
+        html += `</select></td>`;
+        tr.innerHTML += html;
       });
 
-      const tdDel = document.createElement("td");
-      const btn = document.createElement("button");
-      btn.textContent = "🗑 삭제";
-      btn.onclick = () => tr.remove();
-      tdDel.appendChild(btn);
-      tr.appendChild(tdDel);
+      tr.innerHTML += `<td><button onclick="this.parentElement.parentElement.remove()">🗑 삭제</button></td>`;
 
       const tbody = document.querySelector("#playerTable tbody");
       tbody.appendChild(tr);
-
-      sortTableByName();
-
-      nameInput.value = "";
-      numInput.value = "";
-      initAddSelects();
-    }
-
-    function sortTableByName() {
-      const tbody = document.querySelector("#playerTable tbody");
-      const rows = Array.from(tbody.querySelectorAll("tr"));
-
-      rows.sort((a, b) => {
-        const nameA = a.querySelector("td input").value.trim();
-        const nameB = b.querySelector("td input").value.trim();
-        return nameA.localeCompare(nameB, "ko");
-      });
-
-      tbody.innerHTML = "";
-      rows.forEach(row => tbody.appendChild(row));
     }
 
     async function saveAll() {
-      const pw = prompt("저장을 하려면 비밀번호를 입력하세요");
-      if (pw !== "1982") {
-        alert("❌ 비밀번호가 틀렸습니다. 저장이 취소되었습니다.");
-        return;
-      }
+      const ok = await verifyPassword();
+      if (!ok) return alert("비밀번호가 틀렸습니다!");
 
       const rows = Array.from(document.querySelectorAll("#playerTable tbody tr"));
-      const players = rows.map(row => {
-        const inputs = row.querySelectorAll("input");
-        const selects = row.querySelectorAll("select");
 
+      const players = rows.map(tr => {
+        const tds = tr.querySelectorAll("td");
         return {
-          name: inputs[0].value.trim(),
-          num: inputs[1].value.trim(),
-          p: selects[0].value,
-          c: selects[1].value,
-          "1b": selects[2].value,
-          "2b": selects[3].value,
-          "3b": selects[4].value,
-          ss: selects[5].value,
-          of: selects[6].value
+          name: tds[0].querySelector("input").value.trim(),
+          num: tds[1].querySelector("input").value.trim(),
+          p: tds[2].querySelector("select").value,
+          c: tds[3].querySelector("select").value,
+          "1b": tds[4].querySelector("select").value,
+          "2b": tds[5].querySelector("select").value,
+          "3b": tds[6].querySelector("select").value,
+          ss: tds[7].querySelector("select").value,
+          of: tds[8].querySelector("select").value
         };
       });
 
-      players.sort((a, b) => a.name.localeCompare(b.name, "ko"));
-
-      const res = await fetch(`${API_BASE}/updatePlayers`, {
+      const res = await fetch(API.updatePlayers, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(players)
@@ -285,16 +273,17 @@
 
       const result = await res.json();
       if (result.status === "성공") {
-        alert("✅ 저장 완료!");
+        alert("저장되었습니다!");
         loadPlayers();
       } else {
-        alert("❌ 저장 실패: " + result.error);
+        alert("저장 실패: " + result.error);
       }
     }
 
-
+    // 초기 실행
     initAddSelects();
     loadPlayers();
+
   </script>
 </body>
 
