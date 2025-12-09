@@ -1,25 +1,63 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>삼성 헌터스</title>
+  <style>
+    #adminButtons {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 10px;
+    }
+  </style>
 </head>
-
 <body>
+  <div id="adminButtons">
+    <button onclick="goAdmin()">포지션 관리</button>
+    <button onclick="changePassword()">비밀번호 변경</button>
+  </div>
+
   <h1>삼성 헌터스</h1>
 
-  <!-- 기존 메인 컨텐츠들 -->
-
-  <!-- 선수관리 버튼 -->
-  <button id="adminBtn">포지션 관리</button>
-
   <script>
-    document.getElementById('adminBtn').addEventListener('click', () => {
-      window.location.href = 'admin.html';
-    });
+    const API_BASE = "https://us-central1-hunters-f2581.cloudfunctions.net";
+
+    function goAdmin() {
+      window.location.href = "admin.html";
+    }
+
+    async function changePassword() {
+      const oldPw = prompt("현재 비밀번호를 입력하세요");
+      if (!oldPw) return;
+
+      const check = await fetch(`${API_BASE}/checkPassword`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: oldPw })
+      }).then(r => r.json());
+
+      if (check.status !== "성공") {
+        alert("❌ 비밀번호가 틀렸습니다.");
+        return;
+      }
+
+      const newPw = prompt("새 비밀번호를 입력하세요");
+      if (!newPw) return;
+
+      const update = await fetch(`${API_BASE}/updatePassword`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw })
+      }).then(r => r.json());
+
+      if (update.status === "성공") {
+        alert("✅ 비밀번호 변경 완료!");
+      } else {
+        alert("❌ 변경 실패: " + update.error);
+      }
+    }
   </script>
-
 </body>
-
 </html>
