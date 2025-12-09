@@ -2,62 +2,67 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>삼성 헌터스</title>
+
+  <!-- 공통 버튼 스타일 적용 -->
+  <link rel="stylesheet" href="buttonStyles.css" />
+
   <style>
-    #adminButtons {
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .adminButtonBox {
       position: fixed;
-      top: 10px;
-      right: 10px;
+      top: 20px;
+      right: 20px;
       display: flex;
       gap: 10px;
     }
   </style>
 </head>
+
 <body>
-  <div id="adminButtons">
-    <button onclick="goAdmin()">포지션 관리</button>
-    <button onclick="changePassword()">비밀번호 변경</button>
+
+  <div class="adminButtonBox">
+    <button class="buttonStyles" onclick="location.href='admin.html'">포지션 관리</button>
+    <button class="buttonStyles" onclick="changePassword()">암호 변경</button>
+    <button class="buttonStyles" onclick="location.href='order_write.html'">오더 작성</button>
   </div>
 
-  <h1>삼성 헌터스</h1>
+  <h1>⚾ 삼성 헌터스 ⚾</h1>
 
-  <script>
-    const API_BASE = "https://us-central1-hunters-f2581.cloudfunctions.net";
+<script>
+const API = {
+  check: "https://checkpassword-2guymqucma-uc.a.run.app",
+  updatePw: "https://updatepassword-2guymqucma-uc.a.run.app"
+};
 
-    function goAdmin() {
-      window.location.href = "admin.html";
-    }
+async function changePassword() {
+  const oldPw = prompt("현재 비밀번호를 입력하세요");
+  if (!oldPw) return;
 
-    async function changePassword() {
-      const oldPw = prompt("현재 비밀번호를 입력하세요");
-      if (!oldPw) return;
+  const newPw = prompt("변경할 새 비밀번호를 입력하세요");
+  if (!newPw) return;
 
-      const check = await fetch(`${API_BASE}/checkPassword`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: oldPw })
-      }).then(r => r.json());
+  const res = await fetch(API.updatePw, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      oldPassword: oldPw,
+      newPassword: newPw
+    })
+  });
 
-      if (check.status !== "성공") {
-        alert("❌ 비밀번호가 틀렸습니다.");
-        return;
-      }
+  const result = await res.json();
+  if (result.status === "성공") alert("비밀번호가 변경되었습니다!");
+  else alert("❌ 변경 실패: " + result.error);
+}
+</script>
 
-      const newPw = prompt("새 비밀번호를 입력하세요");
-      if (!newPw) return;
-
-      const update = await fetch(`${API_BASE}/updatePassword`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw })
-      }).then(r => r.json());
-
-      if (update.status === "성공") {
-        alert("✅ 비밀번호 변경 완료!");
-      } else {
-        alert("❌ 변경 실패: " + update.error);
-      }
-    }
-  </script>
 </body>
 </html>

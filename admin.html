@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <title>⚾ 삼성 헌터스 선수 포지션 ⚾</title>
+  <!-- 공통 버튼 스타일 적용 -->
+  <link rel="stylesheet" href="buttonStyles.css" />
   <style>
     table {
       width: 100%;
@@ -36,13 +38,6 @@
       margin: 10px;
     }
 
-    .buttonStyles {
-      padding: 6px 10px;
-      font-size: 16px;
-      border-radius: 6px;
-    }
-
-
     table thead th {
       position: sticky;
       top: 0;
@@ -71,6 +66,8 @@
   </div>
 
   <!-- 새로운 선수 추가 영역 -->
+
+  <h3>신규 선수 추가</h3>
   <table>
     <thead>
       <tr>
@@ -102,6 +99,8 @@
     </tbody>
   </table>
   <!-- 기존 선수 목록 테이블 -->
+
+  <h3>선수 목록</h3>
   <table id="playerTable">
     <thead>
       <tr>
