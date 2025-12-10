@@ -2,15 +2,6 @@
    admin.html 전용 스타일
    ========================= */
 
-/* 표 사이즈 (형님이 원하는 대로 수정가능) */
-.table_admin_add {
-  width: 850px; /* 임시 값 */
-}
-
-.table_admin_list {
-  width: 1100px; /* 임시 값 */
-}
-
 /* sticky header */
 table thead th {
   position: sticky;

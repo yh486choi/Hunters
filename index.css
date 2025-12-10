@@ -1,18 +1,115 @@
-/* =========================
-   index 전용
-   ========================= */
-
-body {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  margin: 0;
-  font-size: 16px;
+#orderTable {
+  border-collapse: collapse;
 }
 
-.adminButtonBox {
-  position: fixed;
-  top: 20px;
-  right: 20px;
+#orderTable th, #orderTable td {
+  border: 1px solid #444;
+  padding: 6px;
+  text-align: center;
+}
+
+.deleteSmallBtn {
+  background: #a22;
+  padding: 3px 6px;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 우측 상세뷰 */
+#orderViewPanel {
+  width: 900px;
+}
+
+#orderViewHeader {
   display: flex;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+#selectedOrderName {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* ★ B안: 필드 + 선발 + 대기 가로 배치 */
+#orderDetailWrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 30px;
+  margin-top: 15px;
+}
+
+/* 필드 */
+#fieldArea {
+  width: 500px;
+}
+
+#positionWrapper {
+  width: 500px;
+  height: 400px;
+  position: relative;
+}
+
+#areaB1 {
+  width: 500px;
+  height: 400px;
+  background-image: url("field.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  position: relative;
+  margin-top: 10px;
+}
+
+.posBox {
+  position: absolute;
+  font-size: 14px;
+  font-weight: bold;
+  background: rgba(255,255,255,0.75);
+  padding: 2px 5px;
+  border-radius: 4px;
+  transform: translate(-50%, -50%);
+}
+
+/* 포지션 좌표 */
+#pos_P  { top:65%; left:50%; }
+#pos_C  { top:80%; left:50%; }
+
+#pos_1B { top:60%; left:70%; }
+#pos_3B { top:60%; left:30%; }
+
+#pos_2B { top:45%; left:62%; }
+#pos_SS { top:45%; left:38%; }
+
+#pos_LF { top:28%; left:27%; }
+#pos_CF { top:16%; left:50%; }
+#pos_RF { top:28%; left:73%; }
+
+.table_common {
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table_common th {
+  background: #d7e9ff;   /* order_write와 동일한 파란 헤더 */
+  border: 1px solid #444;
+  padding: 6px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.table_common td {
+  border: 1px solid #444;
+  padding: 6px;
+  text-align: center;
+  font-size: 14px;
+}
+
+#orderListBottom {
+  margin-top: 25px;
+}
+
+#orderListBottom h3 {
+  margin-bottom: 10px;
 }

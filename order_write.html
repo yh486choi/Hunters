@@ -11,18 +11,16 @@
 </head>
 
 <body>
-
-  <h1>오더 작성</h1>
-
   <div style='margin-top:10px; display:flex; gap:10px;'>
     <button class='buttonStyles' onclick="location.href='index.html'">홈 화면</button>
-    <button class='buttonStyles'>불러오기</button>
-    <button class='buttonStyles' onclick='saveOrder()'>저장</button>
   </div>
+
+  <h1>오더 작성</h1>
 
   <div style='margin-top:10px;'>
     <label>오더명: </label>
     <input type='text' id='orderName' placeholder='ex) 26-03-01 NBL' style='width:260px; padding:6px;' />
+    <button class='buttonStyles' onclick='saveOrder()'>저장</button>
   </div>
 
   <div id='mainArea'>
@@ -104,6 +102,9 @@
 
   </div>
 
+  <!-- =======================
+       JS 통합본 시작
+  ======================= -->
   <script>
     const API = { getPlayers: 'https://getplayers-2guymqucma-uc.a.run.app' };
 
@@ -116,38 +117,34 @@
       P: '', C: '', DH: '', '1B': ''
     };
 
-    let startingList = Array(10).fill('').map(() => ({ name: '', num: '', pos: '' }));
+    let startingList = Array(10).fill().map(() => ({ name: '', pos: '' }));
+
 
     const abilityPositions = [
-      { key: 'p', label: '투수' }, { key: 'c', label: '포수' },
-      { key: '1b', label: '1루' }, { key: '2b', label: '2루' },
-      { key: '3b', label: '3루' }, { key: 'ss', label: '유격' },
+      { key: 'p', label: '투수' },
+      { key: 'c', label: '포수' },
+      { key: '1b', label: '1루' },
+      { key: '2b', label: '2루' },
+      { key: '3b', label: '3루' },
+      { key: 'ss', label: '유격' },
       { key: 'of', label: '외야' }
     ];
-
-    window.onload = async () => {
-      await loadPlayerDB();
-      setupStartingTable();
-      renderPlayerSelect();
-      renderPlayerTable();
-      renderPositionSelects();
-      renderStartingTable();
-      renderWaitingTable();
-      renderPositionAbility();
-    };
 
     async function loadPlayerDB() {
       const res = await fetch(API.getPlayers);
       playerDB = await res.json();
     }
 
-    /* =============== 글로벌 유틸 =============== */
     function nameWithNum(name) {
+      if (!name) return '';
       const p = playerDB.find(x => x.name === name);
       return p ? `${name}(${p.num})` : name;
     }
 
-    /* =============== 참가 명단 =============== */
+    /* ===============================
+       참가 명단 처리
+    =============================== */
+
     function renderPlayerSelect() {
       const select = document.getElementById('playerSelect');
       select.innerHTML = '';
@@ -175,13 +172,14 @@
       tbody.innerHTML = '';
 
       selectedPlayers
+        .slice()
         .sort((a, b) => a.localeCompare(b, 'ko'))
         .forEach(name => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-        <td>${nameWithNum(name)}</td>
-        <td><button class='buttonStyles' onclick='removePlayer("${name}")'>삭제</button></td>
-      `;
+            <td>${nameWithNum(name)}</td>
+            <td><button class='buttonStyles' onclick='removePlayer("${name}")'>삭제</button></td>
+          `;
           tbody.appendChild(tr);
         });
     }
@@ -190,40 +188,33 @@
       const name = document.getElementById('playerSelect').value;
       if (!name) return;
 
-      selectedPlayers.push(name);
+      if (!selectedPlayers.includes(name)) {
+        selectedPlayers.push(name);
+      }
 
-      renderPlayerSelect();
-      renderPlayerTable();
-      renderPositionSelects();
-      renderStartingTable();
-      renderWaitingTable();
-      renderPositionAbility();
+      refreshAll();
     }
 
     function removePlayer(name) {
       selectedPlayers = selectedPlayers.filter(n => n !== name);
 
-      for (const pos in positionAssignments) {
-        if (positionAssignments[pos] === name) {
-          positionAssignments[pos] = '';
+      for (const key in positionAssignments) {
+        if (positionAssignments[key] === name) {
+          positionAssignments[key] = '';
         }
       }
 
-      startingList.forEach((row, i) => {
-        if (row.name === name) {
-          startingList[i] = { name: '', num: '', pos: '' };
-        }
-      });
+      startingList = startingList.map(r =>
+        r.name === name ? { name: '', num: '', pos: '' } : r
+      );
 
-      renderPlayerSelect();
-      renderPlayerTable();
-      renderPositionSelects();
-      renderStartingTable();
-      renderWaitingTable();
-      renderPositionAbility();
+      refreshAll();
     }
 
-    /* =============== 포지션 Select =============== */
+    /* ===============================
+       필드 포지션 select
+    =============================== */
+
     function renderPositionSelects() {
       const selects = document.querySelectorAll('.posSelect');
 
@@ -241,99 +232,90 @@
           const opt = document.createElement('option');
           opt.value = name;
           opt.textContent = `${name}(${p.num})`;
+
+          const assignedPos = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
+
+          if (assignedPos && assignedPos !== pos) {
+            opt.style.background = '#d0d0d0';
+            opt.style.color = '#555';
+          }
+
           if (positionAssignments[pos] === name) opt.selected = true;
+
           sel.appendChild(opt);
         });
       });
     }
 
-    function updatePosition(pos, playerName) {
+    function updatePosition(pos, name) {
       for (const key in positionAssignments) {
-        if (positionAssignments[key] === playerName) {
+        if (key !== pos && positionAssignments[key] === name) {
           positionAssignments[key] = '';
         }
       }
 
-      positionAssignments[pos] = playerName;
+      positionAssignments[pos] = name;
 
-      startingList.forEach((row, i) => {
-        if (!row.name) return;
-        const stillAssigned = Object.values(positionAssignments).includes(row.name);
-        if (!stillAssigned) {
-          startingList[i] = { name: '', num: '', pos: '' };
-        }
-      });
-
-      startingList.forEach((row, i) => {
-        if (!row.name) return;
-
-        const posCode = Object.keys(positionAssignments)
-          .find(key => positionAssignments[key] === row.name);
-
-        if (posCode) {
-          const p = playerDB.find(x => x.name === row.name);
-          row.pos = convertPosition(posCode);
-          row.num = p.num;
-        }
-      });
-
-      renderPositionSelects();
-      renderStartingTable();
-      renderWaitingTable();
-      renderPositionAbility();
+      refreshAll();
     }
 
-    /* =============== 선발 테이블 =============== */
+    /* ===============================
+       선발 테이블
+    =============================== */
+
     function setupStartingTable() {
       const tbody = document.getElementById('startingTableBody');
       tbody.innerHTML = '';
 
       for (let i = 0; i < 10; i++) {
-        const orderLabel = (i < 9) ? (i + 1) : '투수';
-
+        const label = i === 9 ? '투수' : (i + 1);
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-      <td>${orderLabel}</td>
-      <td>
-        ${i === 9
-            ? `<span id='start_name_${i}'></span>`
-            : `<select id='start_sel_${i}' style='width:90px;' onchange='selectStarting(${i}, this.value)'></select>`
-          }
-      </td>
-      <td id='start_pos_${i}'></td>
-    `;
+
+        if (i === 9) {
+          tr.innerHTML = `
+            <td>${label}</td>
+            <td><span id='start_name_${i}'></span></td>
+            <td id='start_pos_${i}'></td>
+          `;
+        } else {
+          tr.innerHTML = `
+            <td>${label}</td>
+            <td><select id='start_sel_${i}' onchange='selectStarting(${i}, this.value)'></select></td>
+            <td id='start_pos_${i}'></td>
+          `;
+        }
 
         tbody.appendChild(tr);
       }
     }
 
     function renderStartingTable() {
-      const candidates = Object.values(positionAssignments).filter(v => v !== '');
+      const assignedPlayers = Object.values(positionAssignments).filter(Boolean);
 
       for (let i = 0; i < 10; i++) {
-
         if (i === 9) {
-          const name = positionAssignments['P'];
-          const span = document.getElementById('start_name_' + i);
+          const pitcher = positionAssignments['P'];
+          const span = document.getElementById('start_name_9');
+          const tdPos = document.getElementById('start_pos_9');
 
-          if (name) {
-            span.textContent = nameWithNum(name);
-            startingList[i] = {
-              name,
-              num: playerDB.find(x => x.name === name).num,
+          if (pitcher) {
+            const p = playerDB.find(x => x.name === pitcher);
+            startingList[9] = {
+              name: pitcher,
+              num: p.num,
               pos: convertPosition('P')
             };
-            document.getElementById('start_pos_' + i).textContent = startingList[i].pos;
+            span.textContent = nameWithNum(pitcher);
+            tdPos.textContent = convertPosition('P');
           } else {
+            startingList[9] = { name: '', num: '', pos: '' };
             span.textContent = '';
-            document.getElementById('start_pos_' + i).textContent = '';
-            startingList[i] = { name: '', num: '', pos: '' };
+            tdPos.textContent = '';
           }
-
           continue;
         }
 
-        const sel = document.getElementById('start_sel_' + i);
+        const sel = document.getElementById(`start_sel_${i}`);
         sel.innerHTML = '';
 
         const blank = document.createElement('option');
@@ -341,71 +323,90 @@
         blank.textContent = ' ';
         sel.appendChild(blank);
 
-        candidates.forEach(name => {
+        assignedPlayers.forEach(name => {
           const p = playerDB.find(x => x.name === name);
           const opt = document.createElement('option');
+
           opt.value = name;
           opt.textContent = `${name}(${p.num})`;
+
+          const alreadyUsed = startingList.slice(0, 9).some(r => r.name === name);
+
+          if (alreadyUsed && startingList[i].name !== name) {
+            opt.style.background = '#d0d0d0';
+            opt.style.color = '#555';
+          }
+
           if (startingList[i].name === name) opt.selected = true;
+
           sel.appendChild(opt);
         });
 
         const row = startingList[i];
-        document.getElementById('start_pos_' + i).textContent = row.pos || '';
+        document.getElementById(`start_pos_${i}`).textContent = row.pos || '';
       }
     }
 
-    function selectStarting(idx, playerName) {
-      startingList.forEach((row, i) => {
-        if (i !== idx && row.name === playerName) {
+    function selectStarting(idx, name) {
+      startingList.forEach((r, i) => {
+        if (i !== idx && r.name === name) {
           startingList[i] = { name: '', num: '', pos: '' };
         }
       });
 
-      if (!playerName) {
+      if (!name) {
         startingList[idx] = { name: '', num: '', pos: '' };
       } else {
-        const p = playerDB.find(x => x.name === playerName);
-        const posCode = Object.keys(positionAssignments)
-          .find(key => positionAssignments[key] === playerName);
+        const p = playerDB.find(x => x.name === name);
+        const foundPos = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
 
         startingList[idx] = {
-          name: playerName,
+          name,
           num: p.num,
-          pos: convertPosition(posCode)
+          pos: convertPosition(foundPos)
         };
       }
 
-      renderStartingTable();
-      renderWaitingTable();
-      renderPositionAbility();
+      refreshAll();
     }
 
-    /* =============== 대기 명단 =============== */
-    function renderWaitingTable() {
-      const tbody = document.getElementById('waitingTableBody');
-      tbody.innerHTML = '';
+    /* ===============================
+       대기 명단
+    =============================== */
 
-      const starters = startingList.map(r => r.name).filter(v => v);
+function renderWaitingTable() {
+  const tbody = document.getElementById('waitingTableBody');
+  tbody.innerHTML = '';
 
-      selectedPlayers
-        .filter(name => !starters.includes(name))
-        .sort((a, b) => a.localeCompare(b, 'ko'))
-        .forEach(name => {
-          const tr = document.createElement('tr');
+  const used = startingList.map(r => r.name).filter(Boolean);
 
-          const info = playerDB.find(x => x.name === name);
+  selectedPlayers
+    .filter(n => !used.includes(n)) // 선발 제외 → 대기 명단
+    .sort((a, b) => a.localeCompare(b, 'ko'))
+    .forEach(name => {
 
-          tr.innerHTML = `<td>${nameWithNum(name)}</td>`;
+      const assignedPos = Object.keys(positionAssignments)
+        .find(k => positionAssignments[k] === name);
 
-          if (Object.values(positionAssignments).includes(name))
-            tr.classList.add('warningRow');
+      const isStarter = startingList.some(r => r.name === name);
 
-          tbody.appendChild(tr);
-        });
-    }
+      const tr = document.createElement('tr');
 
-    /* =============== 출전 가능 포지션 =============== */
+      // ⭐ 포지션은 선택되었는데 선발에는 포함되지 않은 경우 → 노란색 음영 (position-selected)
+      if (assignedPos && !isStarter) {
+        tr.classList.add("position-selected");  // ← 노란색 처리
+      }
+
+      tr.innerHTML = `<td>${nameWithNum(name)}</td>`;
+      tbody.appendChild(tr);
+    });
+}
+
+
+    /* ===============================
+       능력표 (음영 처리 복구)
+    =============================== */
+
     function renderPositionAbility() {
       const container = document.getElementById('positionAbilityContainer');
       container.innerHTML = '';
@@ -413,7 +414,7 @@
       const table = document.createElement('table');
       table.classList.add("table_common");
 
-      const players = selectedPlayers.slice().sort((a, b) => a.localeCompare(b, 'ko'));
+      const players = [...selectedPlayers].sort((a, b) => a.localeCompare(b, 'ko'));
 
       abilityPositions.forEach(pos => {
         const starters = [];
@@ -421,18 +422,19 @@
 
         players.forEach(name => {
           const p = playerDB.find(x => x.name === name);
-          const v = Number(p[pos.key]);
-          if (v === 2) starters.push(name);
-          else if (v === 1) backups.push(name);
+          const val = Number(p[pos.key]);
+          if (val === 2) starters.push(name);
+          else if (val === 1) backups.push(name);
         });
 
+        /* ========== 선발 행 ========== */
         const trStarter = document.createElement('tr');
-
         const tdPos = document.createElement('td');
         tdPos.textContent = pos.label;
         tdPos.rowSpan = 2;
         tdPos.style.background = '#bae4ff';
         tdPos.style.fontWeight = 'bolder';
+
         trStarter.appendChild(tdPos);
 
         const tdStarterLabel = document.createElement('td');
@@ -444,20 +446,20 @@
         starters.forEach(name => {
           const td = document.createElement('td');
           td.textContent = nameWithNum(name);
-          td.style.cursor = 'pointer';
           td.onclick = () => onAbilityClick(name, pos.key);
+
           const assigned = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
           if (assigned) {
-            if (isSamePosition(pos.key, assigned.toLowerCase())) td.classList.add('position-selected');
-            else td.classList.add('position-locked');
+            if (isSamePosition(pos.key, assigned))
+              td.classList.add("position-selected");
+            else
+              td.classList.add("position-locked");
           }
           trStarter.appendChild(td);
         });
 
-        table.appendChild(trStarter);
-
+        /* ========== 후보 행 ========== */
         const trBackup = document.createElement('tr');
-
         const tdBackupLabel = document.createElement('td');
         tdBackupLabel.textContent = '후보';
         tdBackupLabel.style.background = '#ffbbbb';
@@ -467,74 +469,74 @@
         backups.forEach(name => {
           const td = document.createElement('td');
           td.textContent = nameWithNum(name);
-          td.style.cursor = 'pointer';
           td.onclick = () => onAbilityClick(name, pos.key);
+
           const assigned = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
           if (assigned) {
-            if (isSamePosition(pos.key, assigned.toLowerCase())) td.classList.add('position-selected');
-            else td.classList.add('position-locked');
+            if (isSamePosition(pos.key, assigned))
+              td.classList.add("position-selected");
+            else
+              td.classList.add("position-locked");
           }
           trBackup.appendChild(td);
         });
 
+        table.appendChild(trStarter);
         table.appendChild(trBackup);
       });
 
       container.appendChild(table);
     }
 
-    function isSamePosition(posKey, assignedPos) {
-      if (!assignedPos) return false;
-      if (posKey === 'of')
-        return ['cf', 'lf', 'rf'].includes(assignedPos);
-      return posKey === assignedPos;
+    function isSamePosition(posKey, assigned) {
+      if (!assigned) return false;
+
+      const a = assigned.toLowerCase();
+
+      if (posKey === 'of') {
+        return ['cf', 'lf', 'rf'].includes(a);
+      }
+
+      return posKey.toLowerCase() === a;
     }
 
     function convertPosition(code) {
       const map = {
-        CF: '중견수(CF)', LF: '좌익수(LF)', RF: '우익수(RF)',
-        SS: '유격수(SS)', '2B': '2루수(2B)', '3B': '3루수(3B)',
-        '1B': '1루수(1B)', P: '투수(P)', C: '포수(C)', DH: '지명타자(DH)'
+        CF: '중견수(CF)',
+        LF: '좌익수(LF)',
+        RF: '우익수(RF)',
+        SS: '유격수(SS)',
+        '2B': '2루수(2B)',
+        '3B': '3루수(3B)',
+        '1B': '1루수(1B)',
+        P: '투수(P)',
+        C: '포수(C)',
+        DH: '지명타자(DH)'
       };
       return map[code] || '';
     }
 
-    function saveOrder() {
-      const name = document.getElementById('orderName').value.trim();
-      if (!name) return alert('오더명을 입력해주세요.');
-
-      const payload = {
-        orderName: name,
-        players: [...selectedPlayers],
-        positions: { ...positionAssignments },
-        startingList: [...startingList]
-      };
-
-      console.log(payload);
-      alert('저장 기능은 추후 구현됩니다!');
-    }
+    /* ===============================
+       외야 포지션 팝업 처리
+    =============================== */
 
     let pendingOutfieldPlayer = null;
 
-    function onAbilityClick(playerName, posKey) {
-      const posMap = {
-        p: 'P',
-        c: 'C',
-        '1b': '1B',
-        '2b': '2B',
-        '3b': '3B',
-        ss: 'SS',
-        of: null
-      };
-
+    function onAbilityClick(name, posKey) {
       if (posKey === 'of') {
-        pendingOutfieldPlayer = playerName;
+        pendingOutfieldPlayer = name;
         document.getElementById("outfieldPopup").style.display = "block";
         return;
       }
 
+      const posMap = {
+        p: 'P', c: 'C',
+        '1b': '1B', '2b': '2B', '3b': '3B',
+        ss: 'SS'
+      };
+
       const posCode = posMap[posKey];
-      updatePosition(posCode, playerName);
+      updatePosition(posCode, name);
       refreshAll();
     }
 
@@ -552,21 +554,110 @@
       document.getElementById("outfieldPopup").style.display = "none";
     }
 
+    /* ===============================
+       전체 렌더링
+    =============================== */
+
     function refreshAll() {
+      renderPlayerSelect();
+      renderPlayerTable();
       renderPositionSelects();
       renderStartingTable();
       renderWaitingTable();
       renderPositionAbility();
     }
 
+    /* ===============================
+       저장
+    =============================== */
+
+    async function saveOrder() {
+      const name = document.getElementById('orderName').value.trim();
+      if (!name) return alert("오더명을 입력하세요.");
+
+      const pw = prompt("비밀번호를 입력하세요");
+      if (!pw) return;
+
+      const valid = await fetch("https://checkpassword-2guymqucma-uc.a.run.app", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw })
+      }).then(r => r.json());
+
+      if (valid.status !== "성공") {
+        alert("비밀번호 오류");
+        return;
+      }
+
+      const exists = await fetch(
+        "https://orderexists-2guymqucma-uc.a.run.app?name=" + encodeURIComponent(name)
+      ).then(r => r.json());
+
+      if (exists.exists) {
+        if (!confirm("이미 존재하는 오더입니다. 덮어쓸까요?")) return;
+      }
+
+      const payload = {
+        players: selectedPlayers.map(name => {
+          const p = playerDB.find(x => x.name === name);
+          return { name, num: p.num };
+        }),
+
+        positions: { ...positionAssignments },
+        startingList: startingList.map(r => ({
+          name: r.name,
+          pos: r.pos
+        })),
+
+      };
+
+      const res = await fetch("https://saveorder-2guymqucma-uc.a.run.app", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderName: name, payload })
+      }).then(r => r.json());
+
+      if (res.status === "성공") {
+        alert("저장되었습니다!");
+        location.href = "index.html";
+      } else {
+        alert("저장 실패: " + res.error);
+      }
+    }
+
+    /* ===============================
+       초기화
+    =============================== */
+
+    window.onload = async () => {
+      await loadPlayerDB();
+      setupStartingTable();
+      refreshAll();
+
+      const orderName = new URLSearchParams(window.location.search).get("orderName");
+      if (!orderName) return;
+
+      document.getElementById('orderName').value = orderName;
+
+      const data = await fetch(
+        "https://getorder-2guymqucma-uc.a.run.app?name=" + encodeURIComponent(orderName)
+      ).then(r => r.json());
+
+      if (!data || !data.payload) {
+        alert("오더 불러오기 실패");
+        return;
+      }
+
+      selectedPlayers = data.payload.players.map(p => p.name);
+      positionAssignments = { ...positionAssignments, ...data.payload.positions };
+      startingList = [...data.payload.startingList];
+
+      refreshAll();
+    };
   </script>
 
-</body>
-
-</html>
-
-<!-- 외야 포지션 선택 팝업 -->
-<div id="outfieldPopup" style="
+  <!-- 외야 선택 팝업 -->
+  <div id="outfieldPopup" style="
        display:none;
        position:fixed;
        top:50%;
@@ -577,12 +668,15 @@
        padding:20px;
        border-radius:10px;
        z-index:1000;
-       text-align:center;
-     ">
-  <h3>외야 포지션 선택</h3>
-  <button class="buttonStyles" onclick="selectOutfieldPosition('LF')">좌익수(LF)</button>
-  <button class="buttonStyles" onclick="selectOutfieldPosition('CF')">중견수(CF)</button>
-  <button class="buttonStyles" onclick="selectOutfieldPosition('RF')">우익수(RF)</button>
-  <br><br>
-  <button class="buttonStyles" onclick="closeOutfieldPopup()">취소</button>
-</div>
+       text-align:center;">
+    <h3>외야 포지션 선택</h3>
+    <button class="buttonStyles" onclick="selectOutfieldPosition('LF')">좌익수(LF)</button>
+    <button class="buttonStyles" onclick="selectOutfieldPosition('CF')">중견수(CF)</button>
+    <button class="buttonStyles" onclick="selectOutfieldPosition('RF')">우익수(RF)</button>
+    <br><br>
+    <button class="buttonStyles" onclick="closeOutfieldPopup()">취소</button>
+  </div>
+
+</body>
+
+</html>

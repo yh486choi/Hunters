@@ -3,18 +3,18 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>⚾ 삼성 헌터스 선수 포지션 ⚾</title>
+  <title>⚾ 삼성 헌터스 선수 관리 ⚾</title>
 
   <link rel="stylesheet" href="common.css" />
   <link rel="stylesheet" href="admin.css" />
 </head>
 
 <body>
-  <div style="text-align: left; margin: 10px;">
+  <div style='margin-top:10px; display:flex; gap:10px;'>
     <button class="buttonStyles" onclick="goMain()">홈 화면</button>
   </div>
 
-  <h1>⚾ 삼성 헌터스 선수 포지션 ⚾</h1>
+  <h1>⚾ 삼성 헌터스 선수 관리 ⚾</h1>
 
   <span class="new-player-title">신규 선수 추가</span>
 
@@ -23,7 +23,7 @@
       <tr>
         <th>이름</th>
         <th>배번</th>
-        <th>투수</th>
+        <th >투수</th>
         <th>포수</th>
         <th>1루수</th>
         <th>2루수</th>
@@ -35,21 +35,21 @@
     </thead>
     <tbody>
       <tr id="addRow">
-        <td><input type="text" id="add_name" /></td>
-        <td><input type="number" id="add_num" /></td>
-        <td><select id="add_p"></select></td>
-        <td><select id="add_c"></select></td>
-        <td><select id="add_1b"></select></td>
-        <td><select id="add_2b"></select></td>
-        <td><select id="add_3b"></select></td>
-        <td><select id="add_ss"></select></td>
-        <td><select id="add_of"></select></td>
-        <td><button class="buttonStyles" onclick="addNewPlayer()">➕ 추가</button></td>
+        <td style="width: 70px;"><input style="width: 50px;" type="text" id="add_name" /></td>
+        <td style="width: 80px;"><input style="width: 40px;" type="number" id="add_num" /></td>
+        <td style="width: 80px;"><select id="add_p"></select></td>
+        <td style="width: 80px;"><select id="add_c"></select></td>
+        <td style="width: 80px;"><select id="add_1b"></select></td>
+        <td style="width: 80px;"><select id="add_2b"></select></td>
+        <td style="width: 80px;"><select id="add_3b"></select></td>
+        <td style="width: 80px;"><select id="add_ss"></select></td>
+        <td style="width: 80px;"><select id="add_of"></select></td>
+        <td style="width: 60px"><button class="buttonStyles" onclick="addNewPlayer()">➕ 추가</button></td>
       </tr>
     </tbody>
   </table>
 
-  <div class="controls">
+  <div class="controls" style="margin-bottom: 10px;">
     <span>선수목록</span>
     <button class="buttonStyles" onclick="saveAll()">💾 저장</button>
     <button class="buttonStyles" onclick="loadPlayers()">↩ 원래대로</button>
@@ -96,6 +96,7 @@
       window.location.href = "index.html";
     }
 
+    /* 신규 선수 입력 기본값 */
     function initAddSelects() {
       POS_FIELDS.forEach(pos => {
         const sel = document.getElementById(`add_${pos}`);
@@ -120,17 +121,15 @@
       loadPlayers();
     }
 
-    function sortData(data) {
-      return data.sort((a, b) => {
+    function sortData(list) {
+      return list.sort((a, b) => {
         const A = a[currentSortField] ?? "";
         const B = b[currentSortField] ?? "";
-
         if (currentSortField === "num") {
           return currentSortOrder === "asc"
             ? Number(A || 0) - Number(B || 0)
             : Number(B || 0) - Number(A || 0);
         }
-
         return currentSortOrder === "asc"
           ? String(A).localeCompare(String(B), "ko")
           : String(B).localeCompare(String(A), "ko");
@@ -145,12 +144,12 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: pw })
-      });
+      }).then(r => r.json());
 
-      const result = await res.json();
-      return result.status === "성공";
+      return res.status === "성공";
     }
 
+    /* 수정된 행 표시 */
     function addModificationListeners() {
       document.querySelectorAll("#playerTable tbody tr").forEach(tr => {
         tr.querySelectorAll("input, select").forEach(el => {
@@ -162,10 +161,9 @@
     }
 
     async function loadPlayers() {
-      const res = await fetch(API.getPlayers);
-      let data = await res.json();
-      data = sortData(data);
-      renderPlayerTable(data);
+      const data = await fetch(API.getPlayers).then(r => r.json());
+      const sorted = sortData(data);
+      renderPlayerTable(sorted);
       addModificationListeners();
     }
 
@@ -176,12 +174,12 @@
       data.forEach(player => {
         const tr = document.createElement("tr");
 
-        tr.innerHTML += `<td><input type="text" value="${player.name}"></td>`;
-        tr.innerHTML += `<td><input type="number" value="${player.num}"></td>`;
+        tr.innerHTML += `<td style="width:70px"><input type="text" value="${player.name}" style="width:50px"></td>`;
+        tr.innerHTML += `<td style="width:80px"><input type="number" value="${player.num}"" style="width:40px"></td>`;
 
         POS_FIELDS.forEach(f => {
           const cur = player[f] || "0";
-          let html = `<td><select>`;
+          let html = `<td style="width:80px"><select>`;
           ["0", "1", "2"].forEach(v => {
             html += `<option value="${v}" ${v === cur ? "selected" : ""}>${LABELS[v]}</option>`;
           });
@@ -189,8 +187,7 @@
           tr.innerHTML += html;
         });
 
-        tr.innerHTML += `<td><button class="buttonStyles" onclick="this.parentElement.parentElement.remove()">🗑 삭제</button></td>`;
-
+        tr.innerHTML += `<td style="width:60px"><button class="buttonStyles" onclick="this.parentElement.parentElement.remove()">🗑 삭제</button></td>`;
         tbody.appendChild(tr);
       });
     }
@@ -237,13 +234,14 @@
       });
     }
 
+    /* 저장 */
     async function saveAll() {
       const ok = await verifyPassword();
-      if (!ok) return alert("비밀번호가 틀렸습니다!");
+      if (!ok) return alert("비밀번호 오류!");
 
       const rows = Array.from(document.querySelectorAll("#playerTable tbody tr"));
 
-      const players = rows.map(tr => {
+      const list = rows.map(tr => {
         const tds = tr.querySelectorAll("td");
         return {
           name: tds[0].querySelector("input").value.trim(),
@@ -258,30 +256,31 @@
         };
       });
 
+      // 중복 이름 체크
+      const names = list.map(p => p.name);
+      const set = new Set(names);
+      if (set.size !== names.length) {
+        return alert("같은 선수 이름이 중복되었습니다.");
+      }
+
       const res = await fetch(API.updatePlayers, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(players)
-      });
+        body: JSON.stringify(list)
+      }).then(r => r.json());
 
-      const result = await res.json();
-      if (result.status === "성공") {
+      if (res.status === "성공") {
         alert("저장되었습니다!");
-
-        document.querySelectorAll("#playerTable tbody tr").forEach(tr => {
-          tr.classList.remove("modified");
-        });
-
         loadPlayers();
       } else {
-        alert("저장 실패: " + result.error);
+        alert("저장 실패: " + res.error);
       }
     }
 
     initAddSelects();
     loadPlayers();
-
   </script>
+
 </body>
 
 </html>
