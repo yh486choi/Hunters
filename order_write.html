@@ -30,7 +30,7 @@
       <label style="font-weight: bolder;">참가 명단</label>
 
       <div style='display:flex; gap:10px; align-items:center; margin-bottom:10px;'>
-        <select id='playerSelect'></select>
+        <select id='playerSelect' style="width: 90px;"></select>
         <button class='buttonStyles' onclick='addPlayer()'>추가</button>
       </div>
 
@@ -71,7 +71,7 @@
             <thead>
               <tr>
                 <th style="width: 40px;">타순</th>
-                <th style="width: 80px;">선수명</th>
+                <th style="width: 90px;">선수명</th>
                 <th style="width: 100px;">포지션</th>
               </tr>
             </thead>
@@ -87,7 +87,39 @@
                 <th style="width: 80px;">선수명</th>
               </tr>
             </thead>
-            <tbody id='waitingTableBody'></tbody>
+            <tbody id='waitingTableBody'>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+              <tr>
+                <td></td>
+              </tr>
+            </tbody>
+
           </table>
         </div>
 
@@ -280,7 +312,7 @@
         } else {
           tr.innerHTML = `
             <td>${label}</td>
-            <td><select id='start_sel_${i}' onchange='selectStarting(${i}, this.value)'></select></td>
+            <td><select id='start_sel_${i}' style='width:90px' onchange='selectStarting(${i}, this.value)'></select></td>
             <td id='start_pos_${i}'></td>
           `;
         }
@@ -318,32 +350,62 @@
         const sel = document.getElementById(`start_sel_${i}`);
         sel.innerHTML = '';
 
+        // ✅ 빈 option 추가 + 명시적 선택
         const blank = document.createElement('option');
         blank.value = '';
         blank.textContent = ' ';
+        blank.selected = true; // ← 브라우저 자동 선택 방지
         sel.appendChild(blank);
 
+        let selectedName = (startingList[i] && assignedPlayers.includes(startingList[i].name))
+          ? startingList[i].name
+          : '';
+        let hasSelected = false;
+
+        // ✅ 선수 option 생성
         assignedPlayers.forEach(name => {
           const p = playerDB.find(x => x.name === name);
           const opt = document.createElement('option');
-
           opt.value = name;
           opt.textContent = `${name}(${p.num})`;
 
           const alreadyUsed = startingList.slice(0, 9).some(r => r.name === name);
+          const isSelected = selectedName === name;
 
-          if (alreadyUsed && startingList[i].name !== name) {
+          if (alreadyUsed && !isSelected) {
             opt.style.background = '#d0d0d0';
             opt.style.color = '#555';
           }
 
-          if (startingList[i].name === name) opt.selected = true;
+          if (isSelected) {
+            opt.selected = true;
+            hasSelected = true;
+          }
 
           sel.appendChild(opt);
         });
 
+        // ✅ 아무 것도 선택되지 않았다면 첫 번째(blank) 선택
+        if (!hasSelected) {
+          sel.selectedIndex = 0;
+        }
+
         const row = startingList[i];
-        document.getElementById(`start_pos_${i}`).textContent = row.pos || '';
+        const name = row.name?.trim();
+
+        // ✅ 선수명이 없으면: 포지션은 무조건 비운다
+        if (!name) {
+          row.pos = "";
+          document.getElementById(`start_pos_${i}`).textContent = "";
+          continue; // ❗ 여기서 끝. 아래 로직 절대 타면 안 됨
+        }
+
+        // ✅ 선수명이 있을 때만 포지션 계산
+        const assignedPosKey = Object.entries(positionAssignments)
+          .find(([_, v]) => v === name)?.[0];
+
+        row.pos = assignedPosKey ? convertPosition(assignedPosKey) : "";
+        document.getElementById(`start_pos_${i}`).textContent = row.pos;
       }
     }
 
@@ -373,34 +435,54 @@
     /* ===============================
        대기 명단
     =============================== */
+    function renderWaitingTable() {
+      const tbody = document.getElementById('waitingTableBody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
 
-function renderWaitingTable() {
-  const tbody = document.getElementById('waitingTableBody');
-  tbody.innerHTML = '';
+      const used = startingList.map(r => r.name).filter(Boolean);
+      const waitingList = selectedPlayers
+        .filter(n => !used.includes(n)) // 선발 제외 → 대기 명단
+        .sort((a, b) => a.localeCompare(b, 'ko'));
 
-  const used = startingList.map(r => r.name).filter(Boolean);
+      const totalNeeded = Math.max(10, waitingList.length); // ✅ 최소 10행 유지
 
-  selectedPlayers
-    .filter(n => !used.includes(n)) // 선발 제외 → 대기 명단
-    .sort((a, b) => a.localeCompare(b, 'ko'))
-    .forEach(name => {
-
-      const assignedPos = Object.keys(positionAssignments)
-        .find(k => positionAssignments[k] === name);
-
-      const isStarter = startingList.some(r => r.name === name);
-
-      const tr = document.createElement('tr');
-
-      // ⭐ 포지션은 선택되었는데 선발에는 포함되지 않은 경우 → 노란색 음영 (position-selected)
-      if (assignedPos && !isStarter) {
-        tr.classList.add("position-selected");  // ← 노란색 처리
+      // ✅ 현재 행 개수가 부족하면 추가
+      while (rows.length < totalNeeded) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = "<td></td>";
+        tbody.appendChild(tr);
+        rows.push(tr);
       }
 
-      tr.innerHTML = `<td>${nameWithNum(name)}</td>`;
-      tbody.appendChild(tr);
-    });
-}
+      // ✅ 초과 행 제거 (10행 + 필요한 만큼만 유지)
+      while (rows.length > totalNeeded) {
+        const last = rows.pop();
+        tbody.removeChild(last);
+      }
+
+      // ✅ 각 행 내용 채우기
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        row.classList.remove("position-selected");
+        const cell = row.querySelector("td");
+
+        const name = waitingList[i];
+        if (name) {
+          const assignedPos = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
+          const isStarter = startingList.some(r => r.name === name);
+
+          if (assignedPos && !isStarter) {
+            row.classList.add("position-selected");
+          }
+
+          cell.textContent = nameWithNum(name);
+        } else {
+          cell.textContent = "";
+        }
+      }
+    }
+
+
 
 
     /* ===============================
@@ -446,7 +528,7 @@ function renderWaitingTable() {
         starters.forEach(name => {
           const td = document.createElement('td');
           td.textContent = nameWithNum(name);
-          td.onclick = () => onAbilityClick(name, pos.key);
+          td.onclick = (e) => onAbilityClick(name, pos.key, e);
 
           const assigned = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
           if (assigned) {
@@ -469,7 +551,7 @@ function renderWaitingTable() {
         backups.forEach(name => {
           const td = document.createElement('td');
           td.textContent = nameWithNum(name);
-          td.onclick = () => onAbilityClick(name, pos.key);
+          td.onclick = (e) => onAbilityClick(name, pos.key, e);
 
           const assigned = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
           if (assigned) {
@@ -522,10 +604,29 @@ function renderWaitingTable() {
 
     let pendingOutfieldPlayer = null;
 
-    function onAbilityClick(name, posKey) {
+    function onAbilityClick(name, posKey, e) {
       if (posKey === 'of') {
+        event.stopPropagation();
         pendingOutfieldPlayer = name;
-        document.getElementById("outfieldPopup").style.display = "block";
+
+        const popup = document.getElementById("outfieldPopup");
+
+        // 팝업 위치 설정
+        popup.style.left = `50%`;
+        popup.style.top = `70%`;
+        popup.style.display = "block";
+
+        // ✅ 클릭 바깥 닫기 이벤트를 다음 tick에서 등록
+        setTimeout(() => {
+          const onClickOutside = (e) => {
+            if (!popup.contains(e.target)) {
+              closeOutfieldPopup();
+              document.removeEventListener("click", onClickOutside);
+            }
+          };
+          document.addEventListener("click", onClickOutside);
+        }, 0);
+
         return;
       }
 
@@ -630,6 +731,9 @@ function renderWaitingTable() {
     =============================== */
 
     window.onload = async () => {
+      // ✅ 초기화: 시작할 때 무조건 빈 선발명단으로 설정
+      startingList = Array(10).fill().map(() => ({ name: "", num: "", pos: "" }));
+
       await loadPlayerDB();
       setupStartingTable();
       refreshAll();
@@ -650,25 +754,45 @@ function renderWaitingTable() {
 
       selectedPlayers = data.payload.players.map(p => p.name);
       positionAssignments = { ...positionAssignments, ...data.payload.positions };
-      startingList = [...data.payload.startingList];
+      startingList = [...data.payload.startingList];  // ✅ 오더가 있다면 덮어씌움
 
-      refreshAll();
+      refreshAll(); // 실제 오더 표시
+
+      document.addEventListener("click", (e) => {
+        const popup = document.getElementById("outfieldPopup");
+
+        // 팝업이 보이지 않으면 무시
+        if (popup.style.display !== "block") return;
+
+        // 팝업 안쪽 클릭이면 무시
+        if (popup.contains(e.target)) return;
+
+        // 바깥 클릭 → 팝업 닫기
+        closeOutfieldPopup();
+      });
     };
+
+    function closeOutfieldPopup() {
+      const popup = document.getElementById("outfieldPopup");
+      popup.style.display = "none";
+    }
+
+
+
+
+
   </script>
 
   <!-- 외야 선택 팝업 -->
   <div id="outfieldPopup" style="
-       display:none;
-       position:fixed;
-       top:50%;
-       left:50%;
-       transform:translate(-50%, -50%);
-       background:white;
-       border:2px solid #333;
-       padding:20px;
-       border-radius:10px;
-       z-index:1000;
-       text-align:center;">
+  display:none;
+  position:absolute; /* ← absolute → fixed */
+  background:white;
+  border:2px solid #333;
+  padding:5px;
+  border-radius:10px;
+  z-index:1000;
+  text-align:center;">
     <h3>외야 포지션 선택</h3>
     <button class="buttonStyles" onclick="selectOutfieldPosition('LF')">좌익수(LF)</button>
     <button class="buttonStyles" onclick="selectOutfieldPosition('CF')">중견수(CF)</button>
@@ -676,6 +800,7 @@ function renderWaitingTable() {
     <br><br>
     <button class="buttonStyles" onclick="closeOutfieldPopup()">취소</button>
   </div>
+
 
 </body>
 

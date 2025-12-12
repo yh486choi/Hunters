@@ -79,7 +79,61 @@
               <th style="width: 100px;">포지션</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <!-- 타순 1~9 -->
+            <tr>
+              <td>1</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <!-- 10번째는 투수 -->
+            <tr>
+              <td>투수</td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+
         </table>
       </div>
 
@@ -92,7 +146,39 @@
               <th style="width: 80px;">선수명</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <tr>
+              <td></td>
+            </tr>
+            <tr>
+              <td></td>
+            </tr>
+            <tr>
+              <td></td>
+            </tr>
+            <tr>
+              <td></td>
+            </tr>
+            <tr>
+              <td></td>
+            </tr>
+            <tr>
+              <td></td>
+            </tr>
+            <tr>
+              <td></td>
+            </tr>
+            <tr>
+              <td></td>
+            </tr>
+            <tr>
+              <td></td>
+            </tr>
+            <tr>
+              <td></td>
+            </tr>
+          </tbody>
+
         </table>
       </div>
 
@@ -103,7 +189,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  
+
   <script>
     let currentPage = 1;
     const ORDERS_PER_PAGE = 5;
@@ -253,41 +339,58 @@
 
     /* 선발 */
     function renderStarting(list, players) {
-      const tbody = document.querySelector("#startingTable tbody");
-      tbody.innerHTML = "";
+      const rows = document.querySelectorAll("#startingTable tbody tr");
 
-      list.forEach((item, idx) => {
-        const tr = document.createElement("tr");
-        const orderLabel = idx === 9 ? "투수" : (idx + 1);
+      for (let i = 0; i < 10; i++) {
+        const row = rows[i];
+        const item = list[i];
+        const cells = row.querySelectorAll("td");
 
-        tr.innerHTML = `
-          <td>${orderLabel}</td>
-          <td>${item.name ? nameWithNum(item.name, players) : ""}</td>
-          <td>${item.pos || ""}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+        if (item) {
+          const orderLabel = i === 9 ? "투수" : (i + 1);
+          cells[0].textContent = orderLabel;
+          cells[1].textContent = item.name ? nameWithNum(item.name, players) : "";
+          cells[2].textContent = item.pos || "";
+        } else {
+          cells[1].textContent = "";
+          cells[2].textContent = "";
+        }
+      }
     }
+
 
     /* 대기 명단 */
     function renderWaiting(players, startingList) {
       const tbody = document.querySelector("#waitingTable tbody");
-      tbody.innerHTML = "";
+      const rows = Array.from(tbody.querySelectorAll("tr"));
 
-      const usedNames = startingList
-        .map(s => s.name)
-        .filter(Boolean);
-
+      const usedNames = startingList.map(s => s.name).filter(Boolean);
       const waitingNames = players
         .map(p => p.name)
         .filter(n => !usedNames.includes(n));
 
-      waitingNames.forEach(name => {
+      // ✅ 1. 10행 이후는 제거
+      while (rows.length > 10) {
+        const lastRow = rows.pop();
+        lastRow.remove();
+      }
+
+      // ✅ 2. 기본 10행 채우기
+      for (let i = 0; i < 10; i++) {
+        const row = rows[i];
+        const cell = row.querySelector("td");
+        cell.textContent = waitingNames[i] ? nameWithNum(waitingNames[i], players) : "";
+      }
+
+      // ✅ 3. 10개 초과 시 추가 행 생성
+      for (let i = 10; i < waitingNames.length; i++) {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${nameWithNum(name, players)}</td>`;
+        tr.innerHTML = `<td>${nameWithNum(waitingNames[i], players)}</td>`;
         tbody.appendChild(tr);
-      });
+      }
     }
+
+
 
     /* 수정 */
     document.getElementById("editBtn").onclick = () => {
@@ -353,31 +456,47 @@
     /* 캡처 */
     document.getElementById("captureBtn").onclick = async () => {
       const target = document.getElementById("orderViewPanel");
-
       if (!target) return alert("캡처 대상이 없습니다.");
 
-      // 스크롤 방지
       document.body.style.overflow = "hidden";
 
       try {
         const canvas = await html2canvas(target, {
-          scale: 2, // 고해상도 이미지 생성
+          scale: 2,
           useCORS: true
         });
 
-        const image = canvas.toDataURL("image/png");
+        // ✅ JPG 포맷으로 이미지 생성
+        const image = canvas.toDataURL("image/jpeg", 0.92); // 92% 퀄리티
 
-        // 이미지 다운로드
+        // ✅ 캡처 시각 → yymmddhhmmss 형식
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, "0");
+        const timestamp1 =
+          pad(now.getFullYear() % 100) +
+          pad(now.getMonth() + 1) +
+          pad(now.getDate());
+        const timestamp2 =
+          pad(now.getHours()) +
+          pad(now.getMinutes()) +
+          pad(now.getSeconds());
+
+        // ✅ 파일명: order_오더명_시각.jpg
+        const fileName = `order_${currentOrderName}_${timestamp1}_${timestamp2}.jpg`;
+
+        // 다운로드 처리
         const link = document.createElement("a");
         link.href = image;
-        link.download = currentOrderName ? `${currentOrderName}.png` : "order_capture.png";
+        link.download = fileName;
         link.click();
+
       } catch (err) {
         alert("캡처 중 오류 발생: " + err.message);
       } finally {
         document.body.style.overflow = "auto";
       }
     };
+
 
 
     /* 비밀번호 변경 */
