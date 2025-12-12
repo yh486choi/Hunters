@@ -10,13 +10,6 @@ table thead th {
   z-index: 5;
 }
 
-/* 신규 선수 추가 라벨 */
-.new-player-title {
-  font-weight: bold;
-  margin-top: 10px;
-  display: block;
-}
-
 /* 수정된 행 강조 */
 .modified {
   background-color: #fff8d1 !important;
@@ -25,4 +18,5 @@ table thead th {
 .controls {
   text-align: left;
   margin-top: 20px;
+  font-weight: bolder;
 }

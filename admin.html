@@ -10,13 +10,17 @@
 </head>
 
 <body>
+  <h1>⚾ 삼성 헌터스 선수 관리 ⚾</h1>
+  <hr>
   <div style='margin-top:10px; display:flex; gap:10px;'>
-    <button class="buttonStyles" onclick="goMain()">홈 화면</button>
+    <button class="buttonStyles" onclick="goMain()">🏠 홈화면</button>
+    <button class="buttonStyles" onclick="saveAll()">💾 저장</button>
+    <button class="buttonStyles" onclick="loadPlayers()">↩ 원래대로</button>
   </div>
 
-  <h1>⚾ 삼성 헌터스 선수 관리 ⚾</h1>
-
-  <span class="new-player-title">신규 선수 추가</span>
+  <div class="controls" style="margin-bottom: 10px;">
+    <span class="new-player-title">신규 선수 추가</span>
+  </div>
 
   <table class="table_common table_admin_add">
     <thead>
@@ -30,7 +34,7 @@
         <th>3루수</th>
         <th>유격수</th>
         <th>외야수</th>
-        <th>추가</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -44,15 +48,13 @@
         <td style="width: 80px;"><select id="add_3b"></select></td>
         <td style="width: 80px;"><select id="add_ss"></select></td>
         <td style="width: 80px;"><select id="add_of"></select></td>
-        <td style="width: 60px"><button class="buttonStyles" onclick="addNewPlayer()">➕ 추가</button></td>
+        <td style="width: 40px"><button class="buttonStyles" onclick="addNewPlayer()">추가</button></td>
       </tr>
     </tbody>
   </table>
 
   <div class="controls" style="margin-bottom: 10px;">
     <span>선수목록</span>
-    <button class="buttonStyles" onclick="saveAll()">💾 저장</button>
-    <button class="buttonStyles" onclick="loadPlayers()">↩ 원래대로</button>
   </div>
 
   <table id="playerTable" class="table_common table_admin_list">
@@ -67,7 +69,7 @@
         <th>3루수 <button onclick="setSort('3b')">⇅</button></th>
         <th>유격수 <button onclick="setSort('ss')">⇅</button></th>
         <th>외야수 <button onclick="setSort('of')">⇅</button></th>
-        <th>삭제</th>
+        <th></th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -187,7 +189,7 @@
           tr.innerHTML += html;
         });
 
-        tr.innerHTML += `<td style="width:60px"><button class="buttonStyles" onclick="this.parentElement.parentElement.remove()">🗑 삭제</button></td>`;
+        tr.innerHTML += `<td style="width:40px"><button class="buttonStyles" onclick="this.parentElement.parentElement.remove()">삭제</button></td>`;
         tbody.appendChild(tr);
       });
     }

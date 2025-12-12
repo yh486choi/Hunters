@@ -4,33 +4,35 @@
 <head>
   <meta charset='UTF-8' />
   <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-  <title>오더 작성</title>
+  <title>⚾ 삼성 헌터스 오더 작성 ⚾</title>
 
   <link rel="stylesheet" href="common.css" />
   <link rel="stylesheet" href="order_write.css" />
 </head>
 
 <body>
-  <div style='margin-top:10px; display:flex; gap:10px;'>
-    <button class='buttonStyles' onclick="location.href='index.html'">홈 화면</button>
-  </div>
+  <h1>⚾ 삼성 헌터스 오더 작성 ⚾</h1>
 
-  <h1>오더 작성</h1>
+  <hr>
+
+  <div style='margin-top:10px; display:flex; gap:10px;'>
+    <button class='buttonStyles' onclick="location.href='index.html'">🏠 홈화면</button>
+  </div>
 
   <div style='margin-top:10px;'>
     <label>오더명: </label>
     <input type='text' id='orderName' placeholder='ex) 26-03-01 NBL' style='width:260px; padding:6px;' />
-    <button class='buttonStyles' onclick='saveOrder()'>저장</button>
+    <button class='buttonStyles' onclick='saveOrder()'>💾 저장</button>
   </div>
 
   <div id='mainArea'>
 
     <!-- 참가 명단 -->
     <div id='areaA' class='panelBox'>
-      <label style="font-weight: bolder;">참가 명단</label>
+      <span style="font-weight: bolder;">참가 명단</span>
 
-      <div style='display:flex; gap:10px; align-items:center; margin-bottom:10px;'>
-        <select id='playerSelect' style="width: 90px;"></select>
+      <div style='display:flex; gap:10px; align-items:center; margin-bottom:5px; margin-top: 5px;'>
+        <select id='playerSelect' style="width: 100px;"></select>
         <button class='buttonStyles' onclick='addPlayer()'>추가</button>
       </div>
 
@@ -38,7 +40,7 @@
         <thead>
           <tr>
             <th style="width: 80px;">선수명</th>
-            <th style="width: 40px;">삭제</th>
+            <th style="width: 40px;"></th>
           </tr>
         </thead>
         <tbody id='playerTableBody'></tbody>
@@ -70,7 +72,7 @@
             <caption style='font-weight:bolder;'>선발 명단</caption>
             <thead>
               <tr>
-                <th style="width: 40px;">타순</th>
+                <th style="width: 25px;">타순</th>
                 <th style="width: 90px;">선수명</th>
                 <th style="width: 100px;">포지션</th>
               </tr>

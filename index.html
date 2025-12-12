@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
 
-  <title>삼성 헌터스 오더 관리 시스템</title>
+  <title>⚾ 삼성 헌터스 오더 관리 시스템 ⚾</title>
 
   <link rel="stylesheet" href="common.css" />
   <link rel="stylesheet" href="index.css" />
@@ -12,187 +12,181 @@
 
 <body>
   <h1>⚾ 삼성 헌터스 오더 관리 시스템 ⚾</h1>
-
-  <div class="adminButtonBox">
-    <button class="buttonStyles" onclick="location.href='order_write.html'">오더 작성</button>
-    <button class="buttonStyles" onclick="location.href='admin.html'">선수 관리</button>
-    <button class="buttonStyles" onclick="changePassword()">관리자</button>
-  </div>
-
-  <!-- 오더 리스트 -->
-  <div id="orderListBottom" style="margin-bottom: 20px;">
-    <table id="orderTable" class="table_common">
-      <thead>
-        <tr>
-          <th style="width: 720px; text-align: left;">오더명</th>
-          <th style="width: 100px;">저장일자</th>
-          <th style="width: 40px;">삭제</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <div id="pagination" style="margin-top: 10px; display: flex; gap: 5px;"></div>
-  </div>
-
-  <div id="orderViewPanel">
-
-    <div id="orderViewHeader">
-      <span id="selectedOrderName">오더를 선택하세요</span>
-
+  <hr>
+  <div id="mainArea" style="margin-top: 20px;">
+    <div id="orderViewArea">
       <div id="viewButtons">
-        <button class="buttonStyles" id="captureBtn">캡처</button>
-        <button class="buttonStyles" id="editBtn">수정</button>
+        <button class="buttonStyles" id="captureBtn">📷 캡처</button>
+        <button class="buttonStyles" id="editBtn">📝 수정</button>
       </div>
-    </div>
 
-    <hr>
+      <div id="orderViewPanel">
+        <span id="selectedOrderName">오더를 선택하세요</span>
 
-    <div id="orderDetailWrapper">
-
-      <!-- 필드 -->
-      <div id="fieldArea">
         <div id="positionWrapper">
-          <div id="areaB">
-            <div id="areaB1">
-              <div class="posBox" id="pos_P"></div>
-              <div class="posBox" id="pos_C"></div>
-              <div class="posBox" id="pos_1B"></div>
-              <div class="posBox" id="pos_2B"></div>
-              <div class="posBox" id="pos_3B"></div>
-              <div class="posBox" id="pos_SS"></div>
-              <div class="posBox" id="pos_LF"></div>
-              <div class="posBox" id="pos_CF"></div>
-              <div class="posBox" id="pos_RF"></div>
-            </div>
+          <div class="posBox" id="pos_P"></div>
+          <div class="posBox" id="pos_C"></div>
+          <div class="posBox" id="pos_1B"></div>
+          <div class="posBox" id="pos_2B"></div>
+          <div class="posBox" id="pos_3B"></div>
+          <div class="posBox" id="pos_SS"></div>
+          <div class="posBox" id="pos_LF"></div>
+          <div class="posBox" id="pos_CF"></div>
+          <div class="posBox" id="pos_RF"></div>
+        </div>
+
+
+        <div id="orderArea">
+
+          <!-- 선발 -->
+          <div id="startingArea">
+            <span style="font-weight: bolder; text-align:center;">선발 명단</span>
+
+            <table id="startingTable" class="table_common">
+              <thead>
+                <tr>
+                  <th style="width: 30px;">타순</th>
+                  <th style="width: 80px;">선수명</th>
+                  <th style="width: 100px;">포지션</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- 타순 1~9 -->
+                <tr>
+                  <td>1</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>6</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>7</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>8</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>9</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <!-- 10번째는 투수 -->
+                <tr>
+                  <td>투수</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 대기 -->
+          <div id="waitingArea">
+            <label style="font-weight: bolder;">대기 명단</label>
+            <table id="waitingTable" class="table_common">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">선수명</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td></td>
+                </tr>
+              </tbody>
+
+            </table>
           </div>
         </div>
       </div>
-
-      <!-- 선발 -->
-      <div id="startingArea">
-        <label style="font-weight: bolder;">선발 명단</label>
-        <table id="startingTable" class="table_common">
-          <thead>
-            <tr>
-              <th style="width: 20px;">타순</th>
-              <th style="width: 80px;">선수명</th>
-              <th style="width: 100px;">포지션</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- 타순 1~9 -->
-            <tr>
-              <td>1</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>4</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>5</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>6</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>7</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>8</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>9</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <!-- 10번째는 투수 -->
-            <tr>
-              <td>투수</td>
-              <td></td>
-              <td></td>
-            </tr>
-          </tbody>
-
-        </table>
-      </div>
-
-      <!-- 대기 -->
-      <div id="waitingArea">
-        <label style="font-weight: bolder;">대기 명단</label>
-        <table id="waitingTable" class="table_common">
-          <thead>
-            <tr>
-              <th style="width: 80px;">선수명</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-            </tr>
-            <tr>
-              <td></td>
-            </tr>
-          </tbody>
-
-        </table>
-      </div>
-
     </div>
 
-    <hr>
+
+    <div id="orderListArea">
+      <div class="adminButtonBox">
+        <button class="buttonStyles" onclick="location.href='order_write.html'">📝 오더 작성</button>
+        <button class="buttonStyles" onclick="location.href='admin.html'">🙍‍♂️ 선수 관리</button>
+        <button class="buttonStyles" onclick="changePassword()">⚙ 관리자</button>
+      </div>
+
+      <!-- 오더 리스트 -->
+      <div id="orderListBottom" style="margin-top: 10px;">
+        <table id="orderTable" class="table_common">
+          <thead>
+            <tr>
+              <th style="width: 200px; text-align: left;">오더명</th>
+              <th style="width: 100px;">저장일자</th>
+              <th style="width: 40px;"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="pagination" style="margin-top: 10px; display: flex; gap: 5px;"></div>
+      </div>
+    </div>
 
   </div>
+
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <script>
     let currentPage = 1;
-    const ORDERS_PER_PAGE = 5;
+    const ORDERS_PER_PAGE = 18;
     let orderList = []; // 전체 오더 리스트 저장용
 
 
