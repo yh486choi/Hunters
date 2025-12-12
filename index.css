@@ -54,7 +54,7 @@
   background-size: 70% auto;      /* ✅ 이미지 크기 줄이기 */
   background-position: center 450px; /* ✅ 아래로 이동 */
 
-  opacity: 0.2;                   /* ✅ 투명도 (조절 가능) */
+  opacity: 0.1;                   /* ✅ 투명도 (조절 가능) */
   pointer-events: none;           /* ✅ 클릭 방해 안 함 */
   z-index: 0;
 }
