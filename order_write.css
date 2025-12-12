@@ -20,6 +20,8 @@
 
 /* 중앙 영역 */
 #positionWrapper {
+  flex-shrink: 0;
+  width: 360px;
   position: relative;
   border: 1px solid #000;
   border-radius: 10px;
