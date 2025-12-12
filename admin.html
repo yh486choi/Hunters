@@ -23,7 +23,7 @@
       <tr>
         <th>이름</th>
         <th>배번</th>
-        <th >투수</th>
+        <th>투수</th>
         <th>포수</th>
         <th>1루수</th>
         <th>2루수</th>
@@ -36,7 +36,7 @@
     <tbody>
       <tr id="addRow">
         <td style="width: 70px;"><input style="width: 50px;" type="text" id="add_name" /></td>
-        <td style="width: 80px;"><input style="width: 40px;" type="number" id="add_num" /></td>
+        <td style="width: 70px;"><input style="width: 40px;" type="number" id="add_num" min="0" max="99" /></td>
         <td style="width: 80px;"><select id="add_p"></select></td>
         <td style="width: 80px;"><select id="add_c"></select></td>
         <td style="width: 80px;"><select id="add_1b"></select></td>
@@ -175,7 +175,7 @@
         const tr = document.createElement("tr");
 
         tr.innerHTML += `<td style="width:70px"><input type="text" value="${player.name}" style="width:50px"></td>`;
-        tr.innerHTML += `<td style="width:80px"><input type="number" value="${player.num}"" style="width:40px"></td>`;
+        tr.innerHTML += `<td style="width:70px"><input type="number" value="${player.num}" style="width:40px"></td>`;
 
         POS_FIELDS.forEach(f => {
           const cur = player[f] || "0";
@@ -198,6 +198,12 @@
 
       if (!name || !num) return alert("이름과 배번은 필수입니다.");
 
+      const numVal = Number(num);
+      if (isNaN(numVal) || numVal < 0 || numVal > 99) {
+        return alert("배번은 0부터 99 사이의 숫자여야 합니다.");
+      }
+
+
       const existing = Array.from(
         document.querySelectorAll("#playerTable tbody tr td:first-child input")
       ).map(i => i.value.trim());
@@ -206,8 +212,8 @@
 
       const tr = document.createElement("tr");
 
-      tr.innerHTML += `<td><input type="text" value="${name}"></td>`;
-      tr.innerHTML += `<td><input type="number" value="${num}"></td>`;
+      tr.innerHTML += `<td style="width:70px"><input type="text" value="${name}" style="width:50px"></td>`;
+      tr.innerHTML += `<td style="width:70px"><input type="number" value="${num}" style="width:40px"></td>`;
 
       POS_FIELDS.forEach(pos => {
         const v = document.getElementById(`add_${pos}`).value;

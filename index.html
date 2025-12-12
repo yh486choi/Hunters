@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
+
   <title>삼성 헌터스 오더 관리 시스템</title>
 
   <link rel="stylesheet" href="common.css" />
@@ -16,6 +17,21 @@
     <button class="buttonStyles" onclick="location.href='order_write.html'">오더 작성</button>
     <button class="buttonStyles" onclick="location.href='admin.html'">선수 관리</button>
     <button class="buttonStyles" onclick="changePassword()">관리자</button>
+  </div>
+
+  <!-- 오더 리스트 -->
+  <div id="orderListBottom" style="margin-bottom: 20px;">
+    <table id="orderTable" class="table_common">
+      <thead>
+        <tr>
+          <th style="width: 720px; text-align: left;">오더명</th>
+          <th style="width: 100px;">저장일자</th>
+          <th style="width: 40px;">삭제</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="pagination" style="margin-top: 10px; display: flex; gap: 5px;"></div>
   </div>
 
   <div id="orderViewPanel">
@@ -84,24 +100,15 @@
 
     <hr>
 
-    <!-- 오더 리스트 -->
-    <div id="orderListBottom">
-      <h3>오더 리스트</h3>
-      <table id="orderTable" class="table_common">
-        <thead>
-          <tr>
-            <th style="width: 760px; text-align: left;">오더명</th>
-            <th style="width: 100px;">저장일자</th>
-            <th style="width: 40px;">삭제</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  
   <script>
+    let currentPage = 1;
+    const ORDERS_PER_PAGE = 5;
+    let orderList = []; // 전체 오더 리스트 저장용
+
 
     const API = {
       getOrders: "https://getorders-2guymqucma-uc.a.run.app",
@@ -125,20 +132,48 @@
       return p ? `${name}(${p.num})` : name;
     }
 
-    window.onload = () => loadOrderList();
+    window.onload = async () => {
+      loadOrderList(); // 페이지까지 자동으로 맞춰짐
+    };
+
+    function renderPagination() {
+      const container = document.getElementById("pagination");
+      container.innerHTML = "";
+
+      const totalPages = Math.ceil(orderList.length / ORDERS_PER_PAGE);
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.className = "buttonStyles";
+        if (i === currentPage) {
+          btn.style.background = "#ffd966"; // 선택된 페이지 강조
+        }
+        btn.onclick = () => renderOrderPage(i);
+        container.appendChild(btn);
+      }
+    }
 
     /* 리스트 로딩 */
-    async function loadOrderList() {
+    function renderOrderPage(page) {
+      currentPage = page;
+
       const tbody = document.querySelector("#orderTable tbody");
       tbody.innerHTML = "";
 
-      const list = await fetch(API.getOrders).then(r => r.json());
+      const start = (page - 1) * ORDERS_PER_PAGE;
+      const end = start + ORDERS_PER_PAGE;
+      const pageOrders = orderList.slice(start, end);
 
-      list.forEach(item => {
+      pageOrders.forEach(item => {
         const tr = document.createElement("tr");
 
+        // ✅ 현재 선택된 오더명과 같으면 강조
+        if (item.orderName === currentOrderName) {
+          tr.classList.add("selected-order-row");
+        }
+
         const nameTd = document.createElement("td");
-        nameTd.textContent = item.orderName;
+        nameTd.innerHTML = `<span class="order-link">${item.orderName}</span>`;
         nameTd.onclick = () => loadOrderView(item.orderName);
         nameTd.style.textAlign = "left";
 
@@ -157,12 +192,20 @@
         tr.appendChild(delTd);
         tbody.appendChild(tr);
       });
+
+
+      renderPagination();
     }
+
+
+
 
     /* 상세 보기 */
     async function loadOrderView(name) {
-      currentOrderName = name;
-      document.getElementById("selectedOrderName").textContent = name;
+
+
+      // URL 업데이트
+      window.history.replaceState(null, "", "?orderName=" + encodeURIComponent(name));
 
       const data = await fetch(API.getOrder + "?name=" + encodeURIComponent(name))
         .then(r => r.json());
@@ -171,6 +214,25 @@
         alert("오더 데이터가 손상되었거나 존재하지 않습니다.");
         return;
       }
+      currentOrderName = name;
+
+      // 강조: 기존 강조 제거 후, 현재 선택 행 강조
+      document.querySelectorAll("#orderTable tbody tr").forEach(tr => {
+        tr.classList.remove("selected-order-row");
+      });
+
+      const rows = Array.from(document.querySelectorAll("#orderTable tbody tr"));
+      const match = rows.find(tr => {
+        const nameCell = tr.querySelector("td:first-child");
+        return nameCell && nameCell.textContent.trim() === name;
+      });
+
+      if (match) {
+        match.classList.add("selected-order-row");
+      }
+
+
+      document.getElementById("selectedOrderName").textContent = name;
 
       const payload = data.payload;
       window._currentPlayers = payload.players;
@@ -233,6 +295,33 @@
       location.href = "order_write.html?orderName=" + encodeURIComponent(currentOrderName);
     };
 
+    async function loadOrderList() {
+      orderList = await fetch(API.getOrders).then(r => r.json());
+
+      // 최신순 정렬
+      orderList.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+
+      const params = new URLSearchParams(location.search);
+      const orderName = params.get("orderName");
+
+      if (orderName) {
+        const index = orderList.findIndex(o => o.orderName === orderName);
+        if (index !== -1) {
+          currentOrderName = orderName; // ✅ 먼저 현재 선택 오더 저장
+          const page = Math.floor(index / ORDERS_PER_PAGE) + 1;
+          renderOrderPage(page);        // ✅ 그 다음 테이블 렌더링 (강조 적용됨)
+          await loadOrderView(orderName); // ✅ 이후 상세 내용 표시
+        } else {
+          renderOrderPage(1);
+        }
+      } else {
+        renderOrderPage(1);
+      }
+
+
+    }
+
+
     /* 삭제 */
     async function deleteOrderWithPW(name) {
       const pw = prompt("삭제 비밀번호 입력");
@@ -262,9 +351,34 @@
     }
 
     /* 캡처 */
-    document.getElementById("captureBtn").onclick = () => {
-      alert("캡처 기능은 추후 추가됩니다.");
+    document.getElementById("captureBtn").onclick = async () => {
+      const target = document.getElementById("orderViewPanel");
+
+      if (!target) return alert("캡처 대상이 없습니다.");
+
+      // 스크롤 방지
+      document.body.style.overflow = "hidden";
+
+      try {
+        const canvas = await html2canvas(target, {
+          scale: 2, // 고해상도 이미지 생성
+          useCORS: true
+        });
+
+        const image = canvas.toDataURL("image/png");
+
+        // 이미지 다운로드
+        const link = document.createElement("a");
+        link.href = image;
+        link.download = currentOrderName ? `${currentOrderName}.png` : "order_capture.png";
+        link.click();
+      } catch (err) {
+        alert("캡처 중 오류 발생: " + err.message);
+      } finally {
+        document.body.style.overflow = "auto";
+      }
     };
+
 
     /* 비밀번호 변경 */
     async function changePassword() {
