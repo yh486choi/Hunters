@@ -510,7 +510,7 @@
           else if (val === 1) backups.push(name);
         });
 
-        /* ========== 선발 행 ========== */
+        /* ========== 주포지션 행 ========== */
         const trStarter = document.createElement('tr');
         const tdPos = document.createElement('td');
         tdPos.textContent = pos.label;
@@ -521,7 +521,7 @@
         trStarter.appendChild(tdPos);
 
         const tdStarterLabel = document.createElement('td');
-        tdStarterLabel.textContent = '선발';
+        tdStarterLabel.textContent = '주';
         tdStarterLabel.style.background = '#bae4ff';
         tdStarterLabel.style.fontWeight = 'bolder';
         trStarter.appendChild(tdStarterLabel);
@@ -541,11 +541,11 @@
           trStarter.appendChild(td);
         });
 
-        /* ========== 후보 행 ========== */
+        /* ========== 부포지션 행 ========== */
         const trBackup = document.createElement('tr');
         const tdBackupLabel = document.createElement('td');
-        tdBackupLabel.textContent = '후보';
-        tdBackupLabel.style.background = '#ffbbbb';
+        tdBackupLabel.textContent = '부';
+        tdBackupLabel.style.background = '#ffcccc';
         tdBackupLabel.style.fontWeight = 'bolder';
         trBackup.appendChild(tdBackupLabel);
 
