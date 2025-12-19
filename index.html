@@ -370,6 +370,35 @@
       if (navigator.share) navigator.share({ title: document.title, url: window.location.href });
       else copyCurrentLink();
     }
+
+    /* [복구] 비밀번호 변경 함수 */
+    async function changePassword() {
+      const oldPw = prompt("현재 비밀번호 입력");
+      if (!oldPw) return;
+
+      const checkRes = await fetch(API.check, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: oldPw })
+      }).then(r => r.json());
+
+      if (checkRes.status !== "성공") {
+        alert("비밀번호 오류");
+        return;
+      }
+
+      const newPw = prompt("새 비밀번호 입력");
+      if (!newPw) return;
+
+      const upd = await fetch(API.updatePw, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw })
+      }).then(r => r.json());
+
+      if (upd.status === "성공") alert("변경 완료!");
+      else alert("변경 실패: " + upd.error);
+    }
   </script>
 </body>
 
