@@ -4,23 +4,15 @@
 
 #orderTable th,
 #orderTable td {
-  border: 1px solid #444;
+  border: 1px solid var(--table-border);
   padding: 6px;
   text-align: center;
 }
 
-.deleteSmallBtn {
-  background: #a22;
-  padding: 3px 6px;
-  color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-
 #selectedOrderName {
   font-size: 24px;
   font-weight: bold;
+  color: var(--text-main);
 }
 
 #mainArea {
@@ -30,36 +22,34 @@
 }
 
 #orderViewPanel {
-  position: relative; /* ✅ 필수 */
+  position: relative;
   width: 362px;
   display: flex;
   flex-direction: column;
-  border: 1px solid #000000;
+  border: 1px solid var(--table-border);
   border-radius: 8px;
   gap: 10px;
   padding: 10px;
   text-align: center;
   margin-top: 10px;
-  background: none; /* ✅ 기존 background-image 제거 */
-  overflow: hidden; /* ✅ 둥근 모서리 유지 */
+  background: var(--bg-main);
+  overflow: hidden;
 }
 
 #orderViewPanel::before {
   content: "";
   position: absolute;
   inset: 0;
-
   background-image: url("hunters.png");
   background-repeat: no-repeat;
-  background-size: 70% auto;      /* ✅ 이미지 크기 줄이기 */
-  background-position: center 450px; /* ✅ 아래로 이동 */
-
-  opacity: 0.1;                   /* ✅ 투명도 (조절 가능) */
-  pointer-events: none;           /* ✅ 클릭 방해 안 함 */
+  background-size: 70% auto;
+  background-position: center 450px;
+  opacity: 0.1;
+  pointer-events: none;
   z-index: 0;
 }
 
-#orderViewPanel > * {
+#orderViewPanel>* {
   position: relative;
   z-index: 1;
 }
@@ -70,18 +60,16 @@
   gap: 10px;
 }
 
-
 #positionWrapper {
   width: 360px;
   height: 288px;
   background-image: url("field.png");
   background-size: cover;
   background-repeat: no-repeat;
-  border: 1px solid #ccc;
+  border: 1px solid var(--table-border);
   border-radius: 8px;
   position: relative;
 }
-
 
 .posBox {
   position: absolute;
@@ -89,8 +77,13 @@
   width: 75px;
   height: 20px;
   font-weight: bold;
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--panel-bg);
+  color: var(--text-main);
   border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--table-border);
 }
 
 /* 포지션 좌표 */
@@ -145,7 +138,7 @@
 }
 
 .table_common {
-  background-color: #ffffff00;
+  background-color: transparent;
   border-collapse: collapse;
   table-layout: fixed;
   margin-top: 5px;
@@ -153,19 +146,20 @@
 }
 
 .table_common th {
-  background: #d7e9ff;
-  /* order_write와 동일한 파란 헤더 */
-  border: 1px solid #aaa;
+  background: var(--table-hdr-bg);
+  border: 1px solid var(--table-border);
   padding: 6px;
   font-weight: bold;
   font-size: 14px;
+  color: var(--button-text);
 }
 
 .table_common td {
-  border: 1px solid #aaa;
+  border: 1px solid var(--table-border);
   padding: 6px;
   text-align: center;
   font-size: 14px;
+  color: var(--text-main);
 }
 
 .order-link {
@@ -174,7 +168,11 @@
   cursor: pointer;
 }
 
+body.dark-mode .order-link {
+  color: #4da3ff;
+}
+
 .selected-order-row {
-  background-color: #fff8b3 !important;
-  /* 연노랑 */
+  background-color: var(--highlight-bg) !important;
+  color: var(--highlight-text) !important;
 }

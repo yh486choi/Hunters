@@ -1,48 +1,124 @@
-/* =========================
-   공통 버튼 스타일
-   ========================= */
+/* =================================================
+   삼성 헌터스 공통 변수 (색상 시스템)
+   ================================================= */
+:root {
+  /* [라이트 모드 전용 변수] */
+  --bg-main: #ffffff;
+  --text-main: #000000;
+  --text-muted: #555555;
+
+  /* 버튼 설정 */
+  --button-bg: #ffffff;
+  --button-text: #000000;
+  --button-border: #9f9f9f;
+  --button-hover: #f2f2f2;
+  --button-active: #e2e2e2;
+
+  /* 테이블 설정 */
+  --table-hdr-bg: #bae4ff;
+  --table-border: #999999;
+  --table-td-bg: transparent;
+
+  /* 하이라이트/강조 (가독성 핵심) */
+  --highlight-bg: #fff8b3;
+  /* 연노랑 */
+  --highlight-text: #000000;
+  /* 검정 글씨 */
+  --locked-bg: #e2e2e2;
+  /* 잠금 상태 */
+
+  /* 패널 및 입력창 */
+  --panel-bg: rgba(255, 255, 255, 0.75);
+  --input-bg: #ffffff;
+  --field-brightness: 1.0;
+}
+
+body.dark-mode {
+  /* [다크 모드 전용 변수] */
+  --bg-main: #1a1a1a;
+  --text-main: #e0e0e0;
+  --text-muted: #aaaaaa;
+
+  /* 버튼 설정 */
+  --button-bg: #333333;
+  --button-text: #ffffff;
+  --button-border: #555555;
+  --button-hover: #444444;
+  --button-active: #222222;
+
+  /* 테이블 설정 */
+  --table-hdr-bg: #2c3e50;
+  /* 진한 청회색 */
+  --table-border: #444444;
+  --table-td-bg: #242424;
+
+  /* 하이라이트/강조 (다크모드 최적화) */
+  --highlight-bg: #5c4d00;
+  /* 어두운 금색/황토색 */
+  --highlight-text: #ffffff;
+  /* 흰색 글씨로 대비 확보 */
+  --locked-bg: #3d3d3d;
+
+  /* 패널 및 입력창 */
+  --panel-bg: rgba(45, 45, 45, 0.85);
+  --input-bg: #2b2b2b;
+}
+
+/* =================================================
+   공통 스타일 적용
+   ================================================= */
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.3s, color 0.3s;
+  margin: 8px;
+  /* 기본 마진 유지 */
+}
+
+/* 버튼 공통 */
 .buttonStyles {
   padding: 4px 4px;
   font-size: 12px;
   border-radius: 8px;
-  background: #ffffff;
-  border: 1px solid #9f9f9f;
+  background-color: var(--button-bg) !important;
+  color: var(--button-text) !important;
+  border: 1px solid var(--button-border);
   cursor: pointer;
   transition: 0.15s ease;
   user-select: none;
 }
 
 .buttonStyles:hover {
-  background: #f2f2f2;
+  background-color: var(--button-hover) !important;
 }
 
 .buttonStyles:active {
-  background: #e2e2e2;
+  background-color: var(--button-active) !important;
   transform: scale(0.98);
 }
 
-.buttonDanger {
-  background: #ff4b4b;
-  color: white;
-}
-
-.buttonPrimary {
-  background: #007bff;
-  color: white;
-}
-
-/* =========================
-   공통 테이블 스타일 (폭 없음)
-   ========================= */
+/* 테이블 공통 */
 .table_common {
   table-layout: fixed;
   border-collapse: collapse;
+  background-color: var(--table-td-bg);
 }
 
-.table_common th,
+.table_common th {
+  height: 22px;
+  background-color: var(--table-hdr-bg) !important;
+  color: var(--button-text) !important;
+  /* 헤더 텍스트 시인성 확보 */
+  border: 1px solid var(--table-border);
+  padding: 6px;
+  text-align: center;
+  font-weight: bold;
+}
+
 .table_common td {
   height: 22px;
-  border: 1px solid #999;
+  border: 1px solid var(--table-border);
+  color: var(--text-main);
   padding: 6px;
   text-align: center;
   overflow: hidden;
@@ -50,15 +126,46 @@
   white-space: nowrap;
 }
 
-.table_common th {
-  background-color: #bae4ff;
+/* 하이라이트 효과 통합 */
+.selected-order-row,
+.modified,
+.warningRow,
+.position-selected {
+  background-color: var(--highlight-bg) !important;
+  color: var(--highlight-text) !important;
 }
 
-/* =========================
-   공통 input/select
-   ========================= */
+.position-locked {
+  background-color: var(--locked-bg) !important;
+}
+
+/* 입력창 및 셀렉트 박스 */
 input[type="text"],
 input[type="number"],
 select {
+  background-color: var(--input-bg);
+  color: var(--text-main);
+  border: 1px solid var(--button-border);
   text-align: center;
+  border-radius: 4px;
+}
+
+/* 야구장 필드 및 포지션 박스 */
+#positionWrapper,
+#areaB1 {
+  filter: brightness(var(--field-brightness));
+  transition: filter 0.3s;
+}
+
+.posBox,
+.posSelect {
+  background: var(--panel-bg) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--table-border);
+}
+
+/* 스크롤바 등 기타 요소 */
+hr {
+  border: 0;
+  border-top: 1px solid var(--table-border);
 }

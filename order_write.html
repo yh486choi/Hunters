@@ -7,6 +7,15 @@
 
   <link rel="stylesheet" href="common.css" />
   <link rel="stylesheet" href="order_write.css" />
+  <script>
+    /* 페이지 깜빡임 방지: HTML을 읽자마자 테마 적용 */
+    (function () {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    })();
+  </script>
 </head>
 
 <body>
@@ -16,6 +25,7 @@
 
   <div style='margin-top:10px; display:flex; gap:10px;'>
     <button class='buttonStyles' onclick="location.href='index.html'">🏠 홈화면</button>
+    <button class='buttonStyles' onclick="toggleDarkMode()">🌓 테마 전환</button>
   </div>
 
   <div style='margin-top:10px;'>
@@ -26,7 +36,6 @@
 
   <div id='mainArea'>
 
-    <!-- 참가 명단 -->
     <div id='areaA' class='panelBox'>
       <span style="font-weight: bolder;">참가 명단</span>
 
@@ -46,7 +55,6 @@
       </table>
     </div>
 
-    <!-- 중앙 필드 + 선발 -->
     <div id='positionWrapper'>
 
       <div id='areaB1'>
@@ -120,48 +128,48 @@
                 <td></td>
               </tr>
             </tbody>
-
           </table>
         </div>
-
       </div>
-
     </div>
 
-    <!-- 출전 가능 포지션 -->
     <div id='areaB2'>
       <div id='positionAbilityContainer'></div>
     </div>
 
   </div>
 
-  <!-- =======================
-       JS 통합본 시작
-  ======================= -->
   <script>
     const API = { getPlayers: 'https://getplayers-2guymqucma-uc.a.run.app' };
 
     let playerDB = [];
     let selectedPlayers = [];
-
     let positionAssignments = {
-      CF: '', LF: '', RF: '',
-      SS: '', '2B': '', '3B': '',
-      P: '', C: '', DH: '', '1B': ''
+      CF: '', LF: '', RF: '', SS: '', '2B': '', '3B': '', P: '', C: '', DH: '', '1B': ''
     };
-
     let startingList = Array(10).fill().map(() => ({ name: '', pos: '' }));
 
-
     const abilityPositions = [
-      { key: 'p', label: '투수' },
-      { key: 'c', label: '포수' },
-      { key: '1b', label: '1루' },
-      { key: '2b', label: '2루' },
-      { key: '3b', label: '3루' },
-      { key: 'ss', label: '유격' },
+      { key: 'p', label: '투수' }, { key: 'c', label: '포수' },
+      { key: '1b', label: '1루' }, { key: '2b', label: '2루' },
+      { key: '3b', label: '3루' }, { key: 'ss', label: '유격' },
       { key: 'of', label: '외야' }
     ];
+
+    /* 테마 관련 로직 */
+    function applySavedTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
 
     async function loadPlayerDB() {
       const res = await fetch(API.getPlayers);
@@ -174,16 +182,10 @@
       return p ? `${name}(${p.num})` : name;
     }
 
-    /* ===============================
-       참가 명단 처리
-    =============================== */
-
     function renderPlayerSelect() {
       const select = document.getElementById('playerSelect');
       select.innerHTML = '';
-
       const candidates = playerDB.filter(p => !selectedPlayers.includes(p.name));
-
       if (candidates.length === 0) {
         const opt = document.createElement('option');
         opt.textContent = '추가 없음';
@@ -191,7 +193,6 @@
         select.appendChild(opt);
         return;
       }
-
       candidates.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.name;
@@ -203,605 +204,291 @@
     function renderPlayerTable() {
       const tbody = document.getElementById('playerTableBody');
       tbody.innerHTML = '';
-
-      selectedPlayers
-        .slice()
-        .sort((a, b) => a.localeCompare(b, 'ko'))
-        .forEach(name => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${nameWithNum(name)}</td>
-            <td><button class='buttonStyles' onclick='removePlayer("${name}")'>삭제</button></td>
-          `;
-          tbody.appendChild(tr);
-        });
+      selectedPlayers.slice().sort((a, b) => a.localeCompare(b, 'ko')).forEach(name => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${nameWithNum(name)}</td><td><button class='buttonStyles' onclick='removePlayer("${name}")'>삭제</button></td>`;
+        tbody.appendChild(tr);
+      });
     }
 
     function addPlayer() {
       const name = document.getElementById('playerSelect').value;
-      if (!name) return;
-
-      if (!selectedPlayers.includes(name)) {
-        selectedPlayers.push(name);
-      }
-
+      if (name && !selectedPlayers.includes(name)) selectedPlayers.push(name);
       refreshAll();
     }
 
     function removePlayer(name) {
       selectedPlayers = selectedPlayers.filter(n => n !== name);
-
-      for (const key in positionAssignments) {
-        if (positionAssignments[key] === name) {
-          positionAssignments[key] = '';
-        }
-      }
-
-      startingList = startingList.map(r =>
-        r.name === name ? { name: '', num: '', pos: '' } : r
-      );
-
+      for (const key in positionAssignments) { if (positionAssignments[key] === name) positionAssignments[key] = ''; }
+      startingList = startingList.map(r => r.name === name ? { name: '', num: '', pos: '' } : r);
       refreshAll();
     }
 
-    /* ===============================
-       필드 포지션 select
-    =============================== */
-
     function renderPositionSelects() {
       const selects = document.querySelectorAll('.posSelect');
-
       selects.forEach(sel => {
         const pos = sel.id.replace('pos_', '');
         sel.innerHTML = '';
-
         const blank = document.createElement('option');
-        blank.value = '';
-        blank.textContent = ' ';
+        blank.value = ''; blank.textContent = ' ';
         sel.appendChild(blank);
-
         selectedPlayers.forEach(name => {
           const p = playerDB.find(x => x.name === name);
           const opt = document.createElement('option');
-          opt.value = name;
-          opt.textContent = `${name}(${p.num})`;
-
+          opt.value = name; opt.textContent = `${name}(${p.num})`;
           const assignedPos = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
-
-          if (assignedPos && assignedPos !== pos) {
-            opt.style.background = '#d0d0d0';
-            opt.style.color = '#555';
-          }
-
+          if (assignedPos && assignedPos !== pos) { opt.style.background = '#d0d0d0'; opt.style.color = '#555'; }
           if (positionAssignments[pos] === name) opt.selected = true;
-
           sel.appendChild(opt);
         });
       });
     }
 
     function updatePosition(pos, name) {
-      for (const key in positionAssignments) {
-        if (key !== pos && positionAssignments[key] === name) {
-          positionAssignments[key] = '';
-        }
-      }
-
+      for (const key in positionAssignments) { if (key !== pos && positionAssignments[key] === name) positionAssignments[key] = ''; }
       positionAssignments[pos] = name;
-
       refreshAll();
     }
-
-    /* ===============================
-       선발 테이블
-    =============================== */
 
     function setupStartingTable() {
       const tbody = document.getElementById('startingTableBody');
       tbody.innerHTML = '';
-
       for (let i = 0; i < 10; i++) {
         const label = i === 9 ? '투수' : (i + 1);
         const tr = document.createElement('tr');
-
         if (i === 9) {
-          tr.innerHTML = `
-            <td>${label}</td>
-            <td><span id='start_name_${i}'></span></td>
-            <td id='start_pos_${i}'></td>
-          `;
+          tr.innerHTML = `<td>${label}</td><td><span id='start_name_${i}'></span></td><td id='start_pos_${i}'></td>`;
         } else {
-          tr.innerHTML = `
-            <td>${label}</td>
-            <td><select id='start_sel_${i}' style='width:90px' onchange='selectStarting(${i}, this.value)'></select></td>
-            <td id='start_pos_${i}'></td>
-          `;
+          tr.innerHTML = `<td>${label}</td><td><select id='start_sel_${i}' style='width:90px' onchange='selectStarting(${i}, this.value)'></select></td><td id='start_pos_${i}'></td>`;
         }
-
         tbody.appendChild(tr);
       }
     }
 
     function renderStartingTable() {
       const assignedPlayers = Object.values(positionAssignments).filter(Boolean);
-
       for (let i = 0; i < 10; i++) {
         if (i === 9) {
           const pitcher = positionAssignments['P'];
           const span = document.getElementById('start_name_9');
           const tdPos = document.getElementById('start_pos_9');
-
           if (pitcher) {
             const p = playerDB.find(x => x.name === pitcher);
-            startingList[9] = {
-              name: pitcher,
-              num: p.num,
-              pos: convertPosition('P')
-            };
-            span.textContent = nameWithNum(pitcher);
-            tdPos.textContent = convertPosition('P');
+            startingList[9] = { name: pitcher, num: p.num, pos: convertPosition('P') };
+            span.textContent = nameWithNum(pitcher); tdPos.textContent = convertPosition('P');
           } else {
             startingList[9] = { name: '', num: '', pos: '' };
-            span.textContent = '';
-            tdPos.textContent = '';
+            span.textContent = ''; tdPos.textContent = '';
           }
           continue;
         }
-
         const sel = document.getElementById(`start_sel_${i}`);
         sel.innerHTML = '';
-
-        // ✅ 빈 option 추가 + 명시적 선택
         const blank = document.createElement('option');
-        blank.value = '';
-        blank.textContent = ' ';
-        blank.selected = true; // ← 브라우저 자동 선택 방지
+        blank.value = ''; blank.textContent = ' '; blank.selected = true;
         sel.appendChild(blank);
-
-        let selectedName = (startingList[i] && assignedPlayers.includes(startingList[i].name))
-          ? startingList[i].name
-          : '';
+        let selectedName = (startingList[i] && assignedPlayers.includes(startingList[i].name)) ? startingList[i].name : '';
         let hasSelected = false;
-
-        // ✅ 선수 option 생성
         assignedPlayers.forEach(name => {
           const p = playerDB.find(x => x.name === name);
           const opt = document.createElement('option');
-          opt.value = name;
-          opt.textContent = `${name}(${p.num})`;
-
+          opt.value = name; opt.textContent = `${name}(${p.num})`;
           const alreadyUsed = startingList.slice(0, 9).some(r => r.name === name);
-          const isSelected = selectedName === name;
-
-          if (alreadyUsed && !isSelected) {
-            opt.style.background = '#d0d0d0';
-            opt.style.color = '#555';
-          }
-
-          if (isSelected) {
-            opt.selected = true;
-            hasSelected = true;
-          }
-
+          if (alreadyUsed && selectedName !== name) { opt.style.background = '#d0d0d0'; opt.style.color = '#555'; }
+          if (selectedName === name) { opt.selected = true; hasSelected = true; }
           sel.appendChild(opt);
         });
-
-        // ✅ 아무 것도 선택되지 않았다면 첫 번째(blank) 선택
-        if (!hasSelected) {
-          sel.selectedIndex = 0;
-        }
-
+        if (!hasSelected) sel.selectedIndex = 0;
         const row = startingList[i];
-        const name = row.name?.trim();
-
-        // ✅ 선수명이 없으면: 포지션은 무조건 비운다
-        if (!name) {
-          row.pos = "";
-          document.getElementById(`start_pos_${i}`).textContent = "";
-          continue; // ❗ 여기서 끝. 아래 로직 절대 타면 안 됨
-        }
-
-        // ✅ 선수명이 있을 때만 포지션 계산
-        const assignedPosKey = Object.entries(positionAssignments)
-          .find(([_, v]) => v === name)?.[0];
-
+        if (!row.name) { row.pos = ""; document.getElementById(`start_pos_${i}`).textContent = ""; continue; }
+        const assignedPosKey = Object.entries(positionAssignments).find(([_, v]) => v === row.name)?.[0];
         row.pos = assignedPosKey ? convertPosition(assignedPosKey) : "";
         document.getElementById(`start_pos_${i}`).textContent = row.pos;
       }
     }
 
     function selectStarting(idx, name) {
-      startingList.forEach((r, i) => {
-        if (i !== idx && r.name === name) {
-          startingList[i] = { name: '', num: '', pos: '' };
-        }
-      });
-
-      if (!name) {
-        startingList[idx] = { name: '', num: '', pos: '' };
-      } else {
+      startingList.forEach((r, i) => { if (i !== idx && r.name === name) startingList[i] = { name: '', num: '', pos: '' }; });
+      if (!name) { startingList[idx] = { name: '', num: '', pos: '' }; }
+      else {
         const p = playerDB.find(x => x.name === name);
         const foundPos = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
-
-        startingList[idx] = {
-          name,
-          num: p.num,
-          pos: convertPosition(foundPos)
-        };
+        startingList[idx] = { name, num: p.num, pos: convertPosition(foundPos) };
       }
-
       refreshAll();
     }
 
-    /* ===============================
-       대기 명단
-    =============================== */
     function renderWaitingTable() {
       const tbody = document.getElementById('waitingTableBody');
       const rows = Array.from(tbody.querySelectorAll('tr'));
-
       const used = startingList.map(r => r.name).filter(Boolean);
-      const waitingList = selectedPlayers
-        .filter(n => !used.includes(n)) // 선발 제외 → 대기 명단
-        .sort((a, b) => a.localeCompare(b, 'ko'));
-
-      const totalNeeded = Math.max(10, waitingList.length); // ✅ 최소 10행 유지
-
-      // ✅ 현재 행 개수가 부족하면 추가
+      const waitingList = selectedPlayers.filter(n => !used.includes(n)).sort((a, b) => a.localeCompare(b, 'ko'));
+      const totalNeeded = Math.max(10, waitingList.length);
       while (rows.length < totalNeeded) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = "<td></td>";
-        tbody.appendChild(tr);
-        rows.push(tr);
+        const tr = document.createElement("tr"); tr.innerHTML = "<td></td>"; tbody.appendChild(tr); rows.push(tr);
       }
-
-      // ✅ 초과 행 제거 (10행 + 필요한 만큼만 유지)
-      while (rows.length > totalNeeded) {
-        const last = rows.pop();
-        tbody.removeChild(last);
-      }
-
-      // ✅ 각 행 내용 채우기
+      while (rows.length > totalNeeded) { tbody.removeChild(rows.pop()); }
       for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        row.classList.remove("position-selected");
+        const row = rows[i]; row.classList.remove("position-selected");
         const cell = row.querySelector("td");
-
         const name = waitingList[i];
         if (name) {
           const assignedPos = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
-          const isStarter = startingList.some(r => r.name === name);
-
-          if (assignedPos && !isStarter) {
-            row.classList.add("position-selected");
-          }
-
+          if (assignedPos) row.classList.add("position-selected");
           cell.textContent = nameWithNum(name);
-        } else {
-          cell.textContent = "";
-        }
+        } else { cell.textContent = ""; }
       }
     }
-
-
-
-
-    /* ===============================
-       능력표 (음영 처리 복구)
-    =============================== */
 
     function renderPositionAbility() {
       const container = document.getElementById('positionAbilityContainer');
       container.innerHTML = '';
-
       const table = document.createElement('table');
       table.classList.add("table_common");
-
       const players = [...selectedPlayers].sort((a, b) => a.localeCompare(b, 'ko'));
-
       abilityPositions.forEach(pos => {
-        const starters = [];
-        const backups = [];
-
+        const starters = []; const backups = [];
         players.forEach(name => {
           const p = playerDB.find(x => x.name === name);
           const val = Number(p[pos.key]);
-          if (val === 2) starters.push(name);
-          else if (val === 1) backups.push(name);
+          if (val === 2) starters.push(name); else if (val === 1) backups.push(name);
         });
-
-        /* ========== 주포지션 행 ========== */
         const trStarter = document.createElement('tr');
-        const tdPos = document.createElement('td');
-        tdPos.textContent = pos.label;
-        tdPos.rowSpan = 2;
-        tdPos.style.background = '#bae4ff';
-        tdPos.style.fontWeight = 'bolder';
-
+        const tdPos = document.createElement('td'); tdPos.textContent = pos.label; tdPos.rowSpan = 2;
+        tdPos.style.background = 'var(--table-hdr-bg)'; tdPos.style.fontWeight = 'bolder';
         trStarter.appendChild(tdPos);
-
-        const tdStarterLabel = document.createElement('td');
-        tdStarterLabel.textContent = '주';
-        tdStarterLabel.style.background = '#bae4ff';
-        tdStarterLabel.style.fontWeight = 'bolder';
+        const tdStarterLabel = document.createElement('td'); tdStarterLabel.textContent = '주';
+        tdStarterLabel.style.background = 'var(--table-hdr-bg)'; tdStarterLabel.style.fontWeight = 'bolder';
         trStarter.appendChild(tdStarterLabel);
-
         starters.forEach(name => {
-          const td = document.createElement('td');
-          td.textContent = nameWithNum(name);
+          const td = document.createElement('td'); td.textContent = nameWithNum(name);
           td.onclick = (e) => onAbilityClick(name, pos.key, e);
-
           const assigned = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
           if (assigned) {
-            if (isSamePosition(pos.key, assigned))
-              td.classList.add("position-selected");
-            else
-              td.classList.add("position-locked");
+            if (isSamePosition(pos.key, assigned)) td.classList.add("position-selected");
+            else td.classList.add("position-locked");
           }
           trStarter.appendChild(td);
         });
-
-        /* ========== 부포지션 행 ========== */
         const trBackup = document.createElement('tr');
-        const tdBackupLabel = document.createElement('td');
-        tdBackupLabel.textContent = '부';
-        tdBackupLabel.style.background = '#ffcccc';
-        tdBackupLabel.style.fontWeight = 'bolder';
+        const tdBackupLabel = document.createElement('td'); tdBackupLabel.textContent = '부';
+        tdBackupLabel.style.background = 'var(--highlight-bg)'; tdBackupLabel.style.fontWeight = 'bolder';
         trBackup.appendChild(tdBackupLabel);
-
         backups.forEach(name => {
-          const td = document.createElement('td');
-          td.textContent = nameWithNum(name);
+          const td = document.createElement('td'); td.textContent = nameWithNum(name);
           td.onclick = (e) => onAbilityClick(name, pos.key, e);
-
           const assigned = Object.keys(positionAssignments).find(k => positionAssignments[k] === name);
           if (assigned) {
-            if (isSamePosition(pos.key, assigned))
-              td.classList.add("position-selected");
-            else
-              td.classList.add("position-locked");
+            if (isSamePosition(pos.key, assigned)) td.classList.add("position-selected");
+            else td.classList.add("position-locked");
           }
           trBackup.appendChild(td);
         });
-
-        table.appendChild(trStarter);
-        table.appendChild(trBackup);
+        table.appendChild(trStarter); table.appendChild(trBackup);
       });
-
       container.appendChild(table);
     }
 
     function isSamePosition(posKey, assigned) {
       if (!assigned) return false;
-
       const a = assigned.toLowerCase();
-
-      if (posKey === 'of') {
-        return ['cf', 'lf', 'rf'].includes(a);
-      }
-
+      if (posKey === 'of') return ['cf', 'lf', 'rf'].includes(a);
       return posKey.toLowerCase() === a;
     }
 
     function convertPosition(code) {
-      const map = {
-        CF: '중견수(CF)',
-        LF: '좌익수(LF)',
-        RF: '우익수(RF)',
-        SS: '유격수(SS)',
-        '2B': '2루수(2B)',
-        '3B': '3루수(3B)',
-        '1B': '1루수(1B)',
-        P: '투수(P)',
-        C: '포수(C)',
-        DH: '지명타자(DH)'
-      };
+      const map = { CF: '중견수(CF)', LF: '좌익수(LF)', RF: '우익수(RF)', SS: '유격수(SS)', '2B': '2루수(2B)', '3B': '3루수(3B)', '1B': '1루수(1B)', P: '투수(P)', C: '포수(C)', DH: '지명타자(DH)' };
       return map[code] || '';
     }
 
-    /* ===============================
-       외야 포지션 팝업 처리
-    =============================== */
-
     let pendingOutfieldPlayer = null;
-
     function onAbilityClick(name, posKey, e) {
       if (posKey === 'of') {
-        event.stopPropagation();
+        e.stopPropagation();
         pendingOutfieldPlayer = name;
-
         const popup = document.getElementById("outfieldPopup");
-
-        // 팝업 위치 설정
-        popup.style.left = `700px`;
-        popup.style.top = `400px`;
+        popup.style.left = `50%`; popup.style.top = `50%`; popup.style.transform = `translate(-50%, -50%)`;
         popup.style.display = "block";
-
-        // ✅ 클릭 바깥 닫기 이벤트를 다음 tick에서 등록
-        setTimeout(() => {
-          const onClickOutside = (e) => {
-            if (!popup.contains(e.target)) {
-              closeOutfieldPopup();
-              document.removeEventListener("click", onClickOutside);
-            }
-          };
-          document.addEventListener("click", onClickOutside);
-        }, 0);
-
         return;
       }
-
-      const posMap = {
-        p: 'P', c: 'C',
-        '1b': '1B', '2b': '2B', '3b': '3B',
-        ss: 'SS'
-      };
-
-      const posCode = posMap[posKey];
-      updatePosition(posCode, name);
+      const posMap = { p: 'P', c: 'C', '1b': '1B', '2b': '2B', '3b': '3B', ss: 'SS' };
+      updatePosition(posMap[posKey], name);
       refreshAll();
     }
 
     function selectOutfieldPosition(posCode) {
-      if (!pendingOutfieldPlayer) return;
-
-      updatePosition(posCode, pendingOutfieldPlayer);
-
-      pendingOutfieldPlayer = null;
-      closeOutfieldPopup();
-      refreshAll();
+      if (pendingOutfieldPlayer) updatePosition(posCode, pendingOutfieldPlayer);
+      pendingOutfieldPlayer = null; closeOutfieldPopup(); refreshAll();
     }
 
-    function closeOutfieldPopup() {
-      document.getElementById("outfieldPopup").style.display = "none";
-    }
-
-    /* ===============================
-       전체 렌더링
-    =============================== */
+    function closeOutfieldPopup() { document.getElementById("outfieldPopup").style.display = "none"; }
 
     function refreshAll() {
-      renderPlayerSelect();
-      renderPlayerTable();
-      renderPositionSelects();
-      renderStartingTable();
-      renderWaitingTable();
-      renderPositionAbility();
+      renderPlayerSelect(); renderPlayerTable(); renderPositionSelects();
+      renderStartingTable(); renderWaitingTable(); renderPositionAbility();
     }
-
-    /* ===============================
-       저장
-    =============================== */
 
     async function saveOrder() {
       const name = document.getElementById('orderName').value.trim();
       if (!name) return alert("오더명을 입력하세요.");
-
       const pw = prompt("비밀번호를 입력하세요");
       if (!pw) return;
-
       const valid = await fetch("https://checkpassword-2guymqucma-uc.a.run.app", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: pw })
       }).then(r => r.json());
-
-      if (valid.status !== "성공") {
-        alert("비밀번호 오류");
-        return;
-      }
-
-      const exists = await fetch(
-        "https://orderexists-2guymqucma-uc.a.run.app?name=" + encodeURIComponent(name)
-      ).then(r => r.json());
-
-      if (exists.exists) {
-        if (!confirm("이미 존재하는 오더입니다. 덮어쓸까요?")) return;
-      }
-
+      if (valid.status !== "성공") return alert("비밀번호 오류");
+      const exists = await fetch("https://orderexists-2guymqucma-uc.a.run.app?name=" + encodeURIComponent(name)).then(r => r.json());
+      if (exists.exists && !confirm("이미 존재하는 오더입니다. 덮어쓸까요?")) return;
       const payload = {
-        players: selectedPlayers.map(name => {
-          const p = playerDB.find(x => x.name === name);
-          return { name, num: p.num };
-        }),
-
+        players: selectedPlayers.map(n => { const p = playerDB.find(x => x.name === n); return { name: n, num: p.num }; }),
         positions: { ...positionAssignments },
-        startingList: startingList.map(r => ({
-          name: r.name,
-          pos: r.pos
-        })),
-
+        startingList: startingList.map(r => ({ name: r.name, pos: r.pos }))
       };
-
       const res = await fetch("https://saveorder-2guymqucma-uc.a.run.app", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderName: name, payload })
       }).then(r => r.json());
-
-      if (res.status === "성공") {
-        alert("저장되었습니다!");
-        location.href = "index.html";
-      } else {
-        alert("저장 실패: " + res.error);
-      }
+      if (res.status === "성공") { alert("저장되었습니다!"); location.href = "index.html"; }
+      else alert("저장 실패: " + res.error);
     }
 
-    /* ===============================
-       초기화
-    =============================== */
-
     window.onload = async () => {
-      // ✅ 초기화: 시작할 때 무조건 빈 선발명단으로 설정
-      startingList = Array(10).fill().map(() => ({ name: "", num: "", pos: "" }));
-
+      applySavedTheme();
       await loadPlayerDB();
       setupStartingTable();
       refreshAll();
 
       const orderName = new URLSearchParams(window.location.search).get("orderName");
-      if (!orderName) return;
-
-      document.getElementById('orderName').value = orderName;
-
-      const data = await fetch(
-        "https://getorder-2guymqucma-uc.a.run.app?name=" + encodeURIComponent(orderName)
-      ).then(r => r.json());
-
-      if (!data || !data.payload) {
-        alert("오더 불러오기 실패");
-        return;
+      if (orderName) {
+        document.getElementById('orderName').value = orderName;
+        const data = await fetch("https://getorder-2guymqucma-uc.a.run.app?name=" + encodeURIComponent(orderName)).then(r => r.json());
+        if (data && data.payload) {
+          selectedPlayers = data.payload.players.map(p => p.name);
+          positionAssignments = { ...positionAssignments, ...data.payload.positions };
+          startingList = [...data.payload.startingList];
+          refreshAll();
+        }
       }
-
-      selectedPlayers = data.payload.players.map(p => p.name);
-      positionAssignments = { ...positionAssignments, ...data.payload.positions };
-      startingList = [...data.payload.startingList];  // ✅ 오더가 있다면 덮어씌움
-
-      refreshAll(); // 실제 오더 표시
 
       document.addEventListener("click", (e) => {
         const popup = document.getElementById("outfieldPopup");
-
-        // 팝업이 보이지 않으면 무시
-        if (popup.style.display !== "block") return;
-
-        // 팝업 안쪽 클릭이면 무시
-        if (popup.contains(e.target)) return;
-
-        // 바깥 클릭 → 팝업 닫기
-        closeOutfieldPopup();
+        if (popup.style.display === "block" && !popup.contains(e.target)) closeOutfieldPopup();
       });
     };
-
-    function closeOutfieldPopup() {
-      const popup = document.getElementById("outfieldPopup");
-      popup.style.display = "none";
-    }
-
-
-
-
-
   </script>
 
-  <!-- 외야 선택 팝업 -->
-  <div id="outfieldPopup" style="
-  display:none;
-  position:absolute; /* ← absolute → fixed */
-  background:white;
-  border:2px solid #333;
-  padding:5px;
-  border-radius:10px;
-  z-index:1000;
-  text-align:center;">
-    <h3>외야 포지션 선택</h3>
-    <button class="buttonStyles" onclick="selectOutfieldPosition('LF')">좌익수(LF)</button>
-    <button class="buttonStyles" onclick="selectOutfieldPosition('CF')">중견수(CF)</button>
-    <button class="buttonStyles" onclick="selectOutfieldPosition('RF')">우익수(RF)</button>
-    <br><br>
+  <div id="outfieldPopup"
+    style="display:none; position:fixed; background:var(--bg-main); border:2px solid var(--table-border); padding:20px; border-radius:10px; z-index:1000; text-align:center; color:var(--text-main);">
+    <h3 style="margin-top:0;">외야 포지션 선택</h3>
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button class="buttonStyles" onclick="selectOutfieldPosition('LF')">좌익수(LF)</button>
+      <button class="buttonStyles" onclick="selectOutfieldPosition('CF')">중견수(CF)</button>
+      <button class="buttonStyles" onclick="selectOutfieldPosition('RF')">우익수(RF)</button>
+    </div>
+    <br>
     <button class="buttonStyles" onclick="closeOutfieldPopup()">취소</button>
   </div>
-
 
 </body>
 

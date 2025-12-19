@@ -6,17 +6,24 @@
 table thead th {
   position: sticky;
   top: 0;
-  background: #bae4ff !important;
+  background: var(--table-hdr-bg) !important;
+  /* 색상 변수 적용 */
+  color: var(--button-text) !important;
+  /* 텍스트 색상 변수 적용 */
   z-index: 5;
 }
 
-/* 수정된 행 강조 */
 .modified {
-  background-color: #fff8d1 !important;
+  background-color: var(--highlight-bg) !important;
+  /* 하이라이트 변수 적용 */
+  color: var(--highlight-text) !important;
+  /* 하이라이트 텍스트 변수 적용 */
 }
 
 .controls {
   text-align: left;
   margin-top: 20px;
   font-weight: bolder;
+  color: var(--text-main);
+  /* 텍스트 색상 변수 적용 */
 }

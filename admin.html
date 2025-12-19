@@ -7,6 +7,15 @@
 
   <link rel="stylesheet" href="common.css" />
   <link rel="stylesheet" href="admin.css" />
+  <script>
+    /* 페이지 로드 전 테마 즉시 적용 (깜빡임 방지) */
+    (function () {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    })();
+  </script>
 </head>
 
 <body>
@@ -14,6 +23,7 @@
   <hr>
   <div style='margin-top:10px; display:flex; gap:10px;'>
     <button class="buttonStyles" onclick="goMain()">🏠 홈화면</button>
+    <button class="buttonStyles" onclick="toggleDarkMode()">🌓 테마 전환</button>
     <button class="buttonStyles" onclick="saveAll()">💾 저장</button>
     <button class="buttonStyles" onclick="loadPlayers()">↩ 원래대로</button>
   </div>
@@ -83,6 +93,21 @@
       getPlayers: "https://getplayers-2guymqucma-uc.a.run.app",
       updatePlayers: "https://updateplayers-2guymqucma-uc.a.run.app"
     };
+
+    /* 테마 관련 로직 추가 */
+    function applySavedTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
 
     const POS_FIELDS = ["p", "c", "1b", "2b", "3b", "ss", "of"];
     let currentSortField = "name";
@@ -286,6 +311,7 @@
     }
 
     initAddSelects();
+    applySavedTheme(); // 초기 실행 시 테마 복구
     loadPlayers();
   </script>
 

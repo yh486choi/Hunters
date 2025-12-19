@@ -3,11 +3,20 @@
 
 <head>
   <meta charset="UTF-8" />
-
   <title>⚾ 삼성 헌터스 오더 관리 시스템 ⚾</title>
 
   <link rel="stylesheet" href="common.css" />
   <link rel="stylesheet" href="index.css" />
+
+  <script>
+    /* [테마 유지 핵심] 페이지가 그려지기 전 저장된 테마를 즉시 적용 */
+    (function () {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    })();
+  </script>
 </head>
 
 <body>
@@ -38,13 +47,9 @@
           <div class="posBox" id="pos_DH"></div>
         </div>
 
-
         <div id="orderArea">
-
-          <!-- 선발 -->
           <div id="startingArea">
             <span style="font-weight: bolder; text-align:center;">선발 명단</span>
-
             <table id="startingTable" class="table_common">
               <thead>
                 <tr>
@@ -54,7 +59,6 @@
                 </tr>
               </thead>
               <tbody>
-                <!-- 타순 1~9 -->
                 <tr>
                   <td>1</td>
                   <td></td>
@@ -100,7 +104,6 @@
                   <td></td>
                   <td></td>
                 </tr>
-                <!-- 10번째는 투수 -->
                 <tr>
                   <td>투수</td>
                   <td></td>
@@ -110,7 +113,6 @@
             </table>
           </div>
 
-          <!-- 대기 -->
           <div id="waitingArea">
             <label style="font-weight: bolder;">대기 명단</label>
             <table id="waitingTable" class="table_common">
@@ -151,22 +153,20 @@
                   <td></td>
                 </tr>
               </tbody>
-
             </table>
           </div>
         </div>
       </div>
     </div>
 
-
     <div id="orderListArea">
       <div class="adminButtonBox">
         <button class="buttonStyles" onclick="location.href='order_write.html'">📝 오더 작성</button>
         <button class="buttonStyles" onclick="location.href='admin.html'">🙍‍♂️ 선수 관리</button>
         <button class="buttonStyles" onclick="changePassword()">🔒 관리자</button>
+        <button class="buttonStyles" onclick="toggleDarkMode()">🌓 테마 전환</button>
       </div>
 
-      <!-- 오더 리스트 -->
       <div id="orderListBottom" style="margin-top: 10px;">
         <table id="orderTable" class="table_common">
           <thead>
@@ -181,17 +181,28 @@
         <div id="pagination" style="margin-top: 10px; display: flex; gap: 5px;"></div>
       </div>
     </div>
-
   </div>
-
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <script>
+    /* 테마 전환 함수 */
+    function toggleDarkMode() {
+      const isDark = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+
+    /* 테마 복구 함수 */
+    function applySavedTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      }
+    }
+
     let currentPage = 1;
     const ORDERS_PER_PAGE = 18;
-    let orderList = []; // 전체 오더 리스트 저장용
-
+    let orderList = [];
 
     const API = {
       getOrders: "https://getorders-2guymqucma-uc.a.run.app",
@@ -203,120 +214,74 @@
 
     let currentOrderName = null;
 
-    /* 날짜 포맷 */
     function formatDate(dateString) {
       const d = new Date(dateString);
       return `${String(d.getFullYear()).slice(2)}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
     }
 
-    /* 이름(배번) */
     function nameWithNum(name, players) {
       const p = players.find(x => x.name === name);
       return p ? `${name}(${p.num})` : name;
     }
 
     window.onload = async () => {
-      loadOrderList(); // 페이지까지 자동으로 맞춰짐
+      applySavedTheme(); // 페이지 로드 후 확정 적용
+      loadOrderList();
     };
 
     function renderPagination() {
       const container = document.getElementById("pagination");
       container.innerHTML = "";
-
       const totalPages = Math.ceil(orderList.length / ORDERS_PER_PAGE);
       for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement("button");
         btn.textContent = i;
         btn.className = "buttonStyles";
-        if (i === currentPage) {
-          btn.style.background = "#ffd966"; // 선택된 페이지 강조
-        }
+        if (i === currentPage) btn.style.background = "var(--highlight-bg)";
         btn.onclick = () => renderOrderPage(i);
         container.appendChild(btn);
       }
     }
 
-    /* 리스트 로딩 */
     function renderOrderPage(page) {
       currentPage = page;
-
       const tbody = document.querySelector("#orderTable tbody");
       tbody.innerHTML = "";
-
       const start = (page - 1) * ORDERS_PER_PAGE;
       const end = start + ORDERS_PER_PAGE;
       const pageOrders = orderList.slice(start, end);
 
       pageOrders.forEach(item => {
         const tr = document.createElement("tr");
-
-        // ✅ 현재 선택된 오더명과 같으면 강조
-        if (item.orderName === currentOrderName) {
-          tr.classList.add("selected-order-row");
-        }
-
+        if (item.orderName === currentOrderName) tr.classList.add("selected-order-row");
         const nameTd = document.createElement("td");
         nameTd.innerHTML = `<span class="order-link">${item.orderName}</span>`;
         nameTd.onclick = () => loadOrderView(item.orderName);
         nameTd.style.textAlign = "left";
-
         const dateTd = document.createElement("td");
         dateTd.textContent = formatDate(item.savedAt);
-
         const delTd = document.createElement("td");
         const delBtn = document.createElement("button");
         delBtn.textContent = "삭제";
         delBtn.className = "buttonStyles";
         delBtn.onclick = () => deleteOrderWithPW(item.orderName);
         delTd.appendChild(delBtn);
-
-        tr.appendChild(nameTd);
-        tr.appendChild(dateTd);
-        tr.appendChild(delTd);
+        tr.appendChild(nameTd); tr.appendChild(dateTd); tr.appendChild(delTd);
         tbody.appendChild(tr);
       });
-
-
       renderPagination();
     }
 
-
-
-
-    /* 상세 보기 */
     async function loadOrderView(name) {
-
-
-      // URL 업데이트
       window.history.replaceState(null, "", "?orderName=" + encodeURIComponent(name));
-
-      const data = await fetch(API.getOrder + "?name=" + encodeURIComponent(name))
-        .then(r => r.json());
-
-      if (!data || !data.payload) {
-        alert("오더 데이터가 손상되었거나 존재하지 않습니다.");
-        return;
-      }
+      const data = await fetch(API.getOrder + "?name=" + encodeURIComponent(name)).then(r => r.json());
+      if (!data || !data.payload) return alert("데이터 오류");
       currentOrderName = name;
-
-      // 강조: 기존 강조 제거 후, 현재 선택 행 강조
-      document.querySelectorAll("#orderTable tbody tr").forEach(tr => {
-        tr.classList.remove("selected-order-row");
-      });
-
+      document.querySelectorAll("#orderTable tbody tr").forEach(tr => tr.classList.remove("selected-order-row"));
       const rows = Array.from(document.querySelectorAll("#orderTable tbody tr"));
-      const match = rows.find(tr => {
-        const nameCell = tr.querySelector("td:first-child");
-        return nameCell && nameCell.textContent.trim() === name;
-      });
-
-      if (match) {
-        match.classList.add("selected-order-row");
-      }
-
-
+      const match = rows.find(tr => tr.querySelector("td:first-child").textContent.trim() === name);
+      if (match) match.classList.add("selected-order-row");
       document.getElementById("selectedOrderName").textContent = name;
-
       const payload = data.payload;
       window._currentPlayers = payload.players;
       renderPositions(payload.positions);
@@ -324,72 +289,36 @@
       renderWaiting(payload.players, payload.startingList);
     }
 
-    /* 포지션 출력 */
     function renderPositions(pos) {
       ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH"].forEach(key => {
         const box = document.getElementById("pos_" + key);
-        const name = pos[key];
-        box.textContent = name ? nameWithNum(name, window._currentPlayers) : "";
-
+        box.textContent = pos[key] ? nameWithNum(pos[key], window._currentPlayers) : "";
       });
     }
 
-    /* 선발 */
     function renderStarting(list, players) {
       const rows = document.querySelectorAll("#startingTable tbody tr");
-
       for (let i = 0; i < 10; i++) {
         const row = rows[i];
         const item = list[i];
         const cells = row.querySelectorAll("td");
-
         if (item) {
-          const orderLabel = i === 9 ? "투수" : (i + 1);
-          cells[0].textContent = orderLabel;
           cells[1].textContent = item.name ? nameWithNum(item.name, players) : "";
           cells[2].textContent = item.pos || "";
-        } else {
-          cells[1].textContent = "";
-          cells[2].textContent = "";
         }
       }
     }
 
-
-    /* 대기 명단 */
     function renderWaiting(players, startingList) {
       const tbody = document.querySelector("#waitingTable tbody");
-      const rows = Array.from(tbody.querySelectorAll("tr"));
-
       const usedNames = startingList.map(s => s.name).filter(Boolean);
-      const waitingNames = players
-        .map(p => p.name)
-        .filter(n => !usedNames.includes(n));
-
-      // ✅ 1. 10행 이후는 제거
-      while (rows.length > 10) {
-        const lastRow = rows.pop();
-        lastRow.remove();
-      }
-
-      // ✅ 2. 기본 10행 채우기
+      const waitingNames = players.map(p => p.name).filter(n => !usedNames.includes(n));
+      const rows = Array.from(tbody.querySelectorAll("tr"));
       for (let i = 0; i < 10; i++) {
-        const row = rows[i];
-        const cell = row.querySelector("td");
-        cell.textContent = waitingNames[i] ? nameWithNum(waitingNames[i], players) : "";
-      }
-
-      // ✅ 3. 10개 초과 시 추가 행 생성
-      for (let i = 10; i < waitingNames.length; i++) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${nameWithNum(waitingNames[i], players)}</td>`;
-        tbody.appendChild(tr);
+        rows[i].querySelector("td").textContent = waitingNames[i] ? nameWithNum(waitingNames[i], players) : "";
       }
     }
 
-
-
-    /* 수정 */
     document.getElementById("editBtn").onclick = () => {
       if (!currentOrderName) return alert("오더를 선택하세요");
       location.href = "order_write.html?orderName=" + encodeURIComponent(currentOrderName);
@@ -397,162 +326,51 @@
 
     async function loadOrderList() {
       orderList = await fetch(API.getOrders).then(r => r.json());
-
-      // 최신순 정렬
       orderList.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
-
       const params = new URLSearchParams(location.search);
       const orderName = params.get("orderName");
-
       if (orderName) {
         const index = orderList.findIndex(o => o.orderName === orderName);
         if (index !== -1) {
-          currentOrderName = orderName; // ✅ 먼저 현재 선택 오더 저장
-          const page = Math.floor(index / ORDERS_PER_PAGE) + 1;
-          renderOrderPage(page);        // ✅ 그 다음 테이블 렌더링 (강조 적용됨)
-          await loadOrderView(orderName); // ✅ 이후 상세 내용 표시
-        } else {
-          renderOrderPage(1);
-        }
-      } else {
-        renderOrderPage(1);
-      }
-
-
+          currentOrderName = orderName;
+          renderOrderPage(Math.floor(index / ORDERS_PER_PAGE) + 1);
+          await loadOrderView(orderName);
+        } else renderOrderPage(1);
+      } else renderOrderPage(1);
     }
 
-
-    /* 삭제 */
     async function deleteOrderWithPW(name) {
-      const pw = prompt("삭제 비밀번호 입력");
+      const pw = prompt("삭제 비밀번호");
       if (!pw) return;
-
       const valid = await fetch(API.check, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: pw })
       }).then(r => r.json());
-
-      if (valid.status !== "성공") return alert("비밀번호 오류!");
-
-      const res = await fetch(API.deleteOrder + "?name=" + encodeURIComponent(name))
-        .then(r => r.json());
-
-      if (res.status === "deleted") {
-        alert("삭제되었습니다.");
-      } else {
-        alert("삭제 처리 중 오류 발생.");
-      }
-
+      if (valid.status !== "성공") return alert("비밀번호 오류");
+      await fetch(API.deleteOrder + "?name=" + encodeURIComponent(name));
       location.reload();
     }
 
-    /* 캡처 */
     document.getElementById("captureBtn").onclick = async () => {
       const target = document.getElementById("orderViewPanel");
-      if (!target) return alert("캡처 대상이 없습니다.");
-
-      document.body.style.overflow = "hidden";
-
       try {
-        const canvas = await html2canvas(target, {
-          scale: 2,
-          useCORS: true
-        });
-
-        // ✅ JPG 포맷으로 이미지 생성
-        const image = canvas.toDataURL("image/jpeg", 0.92); // 92% 퀄리티
-
-        // ✅ 캡처 시각 → yymmddhhmmss 형식
-        const now = new Date();
-        const pad = (n) => n.toString().padStart(2, "0");
-        const timestamp1 =
-          pad(now.getFullYear() % 100) +
-          pad(now.getMonth() + 1) +
-          pad(now.getDate());
-        const timestamp2 =
-          pad(now.getHours()) +
-          pad(now.getMinutes()) +
-          pad(now.getSeconds());
-
-        // ✅ 파일명: order_오더명_시각.jpg
-        const fileName = `order_${currentOrderName}_${timestamp1}_${timestamp2}.jpg`;
-
-        // 다운로드 처리
+        const canvas = await html2canvas(target, { scale: 2, useCORS: true });
         const link = document.createElement("a");
-        link.href = image;
-        link.download = fileName;
+        link.href = canvas.toDataURL("image/jpeg", 0.92);
+        link.download = `order_${currentOrderName}.jpg`;
         link.click();
-
-      } catch (err) {
-        alert("캡처 중 오류 발생: " + err.message);
-      } finally {
-        document.body.style.overflow = "auto";
-      }
+      } catch (err) { alert("오류: " + err.message); }
     };
 
-
-
-    /* 비밀번호 변경 */
-    async function changePassword() {
-      const oldPw = prompt("현재 비밀번호 입력");
-      if (!oldPw) return;
-
-      const checkRes = await fetch(API.check, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: oldPw })
-      }).then(r => r.json());
-
-      if (checkRes.status !== "성공") {
-        alert("비밀번호 오류");
-        return;
-      }
-
-      const newPw = prompt("새 비밀번호 입력");
-      if (!newPw) return;
-
-      const upd = await fetch(API.updatePw, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw })
-      }).then(r => r.json());
-
-      if (upd.status === "성공") alert("변경 완료!");
-      else alert("변경 실패: " + upd.error);
+    function copyCurrentLink() {
+      navigator.clipboard.writeText(window.location.href).then(() => alert("링크 복사됨"));
     }
 
     function shareCurrentLink() {
-      const url = window.location.href;
-
-      if (navigator.share) {
-        navigator.share({
-          title: document.title,
-          url: url
-        });
-      } else {
-        // 지원 안 되는 환경 → 복사로 대체
-        navigator.clipboard.writeText(url);
-        alert("공유 기능이 없어 링크를 복사했습니다.");
-      }
+      if (navigator.share) navigator.share({ title: document.title, url: window.location.href });
+      else copyCurrentLink();
     }
-
-    function copyCurrentLink() {
-      const url = window.location.href;
-
-      navigator.clipboard.writeText(url)
-        .then(() => {
-          alert("현재 링크가 클립보드에 복사되었습니다.");
-        })
-        .catch(() => {
-          alert("클립보드 복사 실패");
-        });
-    }
-
-
-
   </script>
-
 </body>
 
 </html>
