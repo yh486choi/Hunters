@@ -19,6 +19,11 @@
 </head>
 
 <body>
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div id="loadingText">데이터 처리 중...</div>
+  </div>
+
   <h1>⚾ 삼성 헌터스 오더 작성 ⚾</h1>
 
   <hr>
@@ -140,6 +145,14 @@
   </div>
 
   <script>
+    function showLoading(text = "처리 중...") {
+      document.getElementById("loadingText").textContent = text;
+      document.getElementById("loadingOverlay").style.display = "flex";
+    }
+    function hideLoading() {
+      document.getElementById("loadingOverlay").style.display = "none";
+    }
+
     const API = { getPlayers: 'https://getplayers-2guymqucma-uc.a.run.app' };
 
     let playerDB = [];
@@ -172,8 +185,13 @@
     }
 
     async function loadPlayerDB() {
-      const res = await fetch(API.getPlayers);
-      playerDB = await res.json();
+      showLoading("선수 명단을 동기화하고 있습니다...");
+      try {
+        const res = await fetch(API.getPlayers);
+        playerDB = await res.json();
+      } finally {
+        hideLoading();
+      }
     }
 
     function nameWithNum(name) {
@@ -430,29 +448,71 @@
 
     async function saveOrder() {
       const name = document.getElementById('orderName').value.trim();
-      if (!name) return alert("오더명을 입력하세요.");
+
+      // 1. 입력 유효성 검사
+      if (!name) {
+        return alert("오더명을 입력하세요.");
+      }
+
       const pw = prompt("비밀번호를 입력하세요");
       if (!pw) return;
-      const valid = await fetch("https://checkpassword-2guymqucma-uc.a.run.app", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: pw })
-      }).then(r => r.json());
-      if (valid.status !== "성공") return alert("비밀번호 오류");
-      const exists = await fetch("https://orderexists-2guymqucma-uc.a.run.app?name=" + encodeURIComponent(name)).then(r => r.json());
-      if (exists.exists && !confirm("이미 존재하는 오더입니다. 덮어쓸까요?")) return;
-      const payload = {
-        players: selectedPlayers.map(n => { const p = playerDB.find(x => x.name === n); return { name: n, num: p.num }; }),
-        positions: { ...positionAssignments },
-        startingList: startingList.map(r => ({ name: r.name, pos: r.pos }))
-      };
-      const res = await fetch("https://saveorder-2guymqucma-uc.a.run.app", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderName: name, payload })
-      }).then(r => r.json());
-      if (res.status === "성공") { alert("저장되었습니다!"); location.href = "index.html"; }
-      else alert("저장 실패: " + res.error);
-    }
 
+      // 로딩 시작
+      showLoading("오더 저장 처리 중...");
+
+      try {
+        // 2. 관리자 비밀번호 검증
+        const valid = await fetch("https://checkpassword-2guymqucma-uc.a.run.app", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: pw })
+        }).then(r => r.json());
+
+        if (valid.status !== "성공") {
+          alert("비밀번호 오류");
+          return;
+        }
+
+        // 3. 기존 오더 중복 확인
+        const exists = await fetch("https://orderexists-2guymqucma-uc.a.run.app?name=" + encodeURIComponent(name)).then(r => r.json());
+        if (exists.exists && !confirm("이미 존재하는 오더입니다. 덮어쓸까요?")) {
+          return;
+        }
+
+        // 4. 저장할 데이터 패키징
+        const payload = {
+          players: selectedPlayers.map(n => {
+            const p = playerDB.find(x => x.name === n);
+            return { name: n, num: p.num };
+          }),
+          positions: { ...positionAssignments },
+          startingList: startingList.map(r => ({ name: r.name, pos: r.pos }))
+        };
+
+        // 5. 서버에 오더 저장 요청
+        const res = await fetch("https://saveorder-2guymqucma-uc.a.run.app", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderName: name, payload })
+        }).then(r => r.json());
+
+        // 6. 결과 처리
+        if (res.status === "성공") {
+          alert("저장되었습니다!");
+          location.href = "index.html";
+        } else {
+          alert("저장 실패: " + res.error);
+        }
+
+      } catch (error) {
+        console.error("저장 중 오류 발생:", error);
+        alert("통신 오류가 발생했습니다. 다시 시도해주세요.");
+      } finally {
+        // 성공하든 실패하든 로딩 인디케이터를 반드시 숨김
+        hideLoading();
+      }
+    }
+    
     window.onload = async () => {
       applySavedTheme();
       await loadPlayerDB();
