@@ -311,11 +311,24 @@
 
     function renderWaiting(players, startingList) {
       const tbody = document.querySelector("#waitingTable tbody");
+      // 1. 기존에 생성되어 있던 모든 행을 삭제하여 초기화합니다.
+      tbody.innerHTML = "";
+
       const usedNames = startingList.map(s => s.name).filter(Boolean);
       const waitingNames = players.map(p => p.name).filter(n => !usedNames.includes(n));
-      const rows = Array.from(tbody.querySelectorAll("tr"));
-      for (let i = 0; i < 10; i++) {
-        rows[i].querySelector("td").textContent = waitingNames[i] ? nameWithNum(waitingNames[i], players) : "";
+
+      // 2. 표시할 행의 개수를 결정합니다 (최소 10행, 대기 인원이 더 많으면 그만큼 추가).
+      const rowCount = Math.max(10, waitingNames.length);
+
+      for (let i = 0; i < rowCount; i++) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+
+        // 3. 해당 인덱스에 선수가 있으면 이름을 넣고, 없으면 빈 칸으로 둡니다.
+        td.textContent = waitingNames[i] ? nameWithNum(waitingNames[i], players) : "";
+
+        tr.appendChild(td);
+        tbody.appendChild(tr);
       }
     }
 
